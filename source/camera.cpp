@@ -16,7 +16,7 @@ camera::camera(const glm::vec3& position, const glm::vec3& direction, const glm:
 	up = worldUp;
 
 	pitch = 0.f;
-	yaw = -90.f;
+	yaw = glm::radians(-90.f);
 	roll = 0.f;
 
 	updateMatrix();
@@ -25,14 +25,14 @@ camera::camera(const glm::vec3& position, const glm::vec3& direction, const glm:
 void camera::update(float deltaT, int dx, int dy) {
 
 	static constexpr float maxSpeed = 0.01f;
-	static constexpr float mouseSensitivity = 0.01f;
+	static constexpr float mouseSensitivity = 0.0001f;
 	static constexpr float friction = 1.0f - 0.6f;
 
 	yaw += dx * mouseSensitivity * deltaT;
 	pitch -= dy * mouseSensitivity * deltaT;
 
-	yaw = fmod(yaw, 360.f);
-	pitch = std::min(std::max(pitch, -89.f), 89.f);
+	yaw = fmod(yaw, 2 * M_PI);
+	pitch = std::min(std::max(pitch, (float)-M_PI), (float)M_PI);
 
 	glm::vec3 acceleration(0.f, 0.f, 0.f);
 	
@@ -65,9 +65,9 @@ void camera::update(float deltaT, int dx, int dy) {
 }
 
 void camera::updateMatrix() {
-	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	front.y = sin(glm::radians(pitch));
-	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.x = cos(yaw) * cos(pitch);
+	front.y = sin(pitch);
+	front.z = sin(yaw) * cos(pitch);
 
 	front = glm::normalize(front);
 	right = glm::normalize(glm::cross(front, worldUp));
