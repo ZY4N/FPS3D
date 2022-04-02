@@ -30,10 +30,11 @@ using defaultMesh = mesh<vertex_comps::texCoord, vertex_comps::normal>;
 int main() {
 
 	//----------------------[ window + opengl setup ]----------------------//
+
 	int width = 1280;
 	int height = 720;
 
-    sf::Window window(sf::VideoMode(width, height), "FPS3D", sf::Style::Default);
+	sf::Window window(sf::VideoMode(width, height), "FPS3D", sf::Style::Default);
 	window.setVerticalSyncEnabled(true);
 	window.setActive(true);
 
@@ -109,6 +110,7 @@ int main() {
 	shader.set("colorMerge", 0.0f);
 	shader.set("meshColor", glm::fvec4{ 1.0f, 0.0f, 1.0f, 1.0f });
 
+
 	//----------------------[ mesh loading ]----------------------//
 
 	std::vector<defaultMesh> meshes;
@@ -140,6 +142,9 @@ int main() {
 	}
 
 	std::cout << "finished loading mesh\n";
+
+
+	//----------------------[ game loop ]----------------------//
 
 	camera player({ 0, 0, 0 }, { 0, 0, 1 } , { 0, 1, 0 });
 
