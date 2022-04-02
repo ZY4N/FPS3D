@@ -152,23 +152,23 @@ int main() {
 	constexpr auto frameTime = std::chrono::microseconds(int(1000000.0f / FPS));
 	constexpr float dt = frameTime.count() / 1000.f;
 
-    bool running = true;
+	bool running = true;
 	bool lockMouse = true;
 	window.setMouseCursorVisible(!lockMouse);
 
-    while (running) {
+	while (running) {
 		const auto start = std::chrono::high_resolution_clock::now();
 
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)  {
-                running = false;
-            } else if (event.type == sf::Event::Resized) {
-                glViewport(0, 0, event.size.width, event.size.height);
+		sf::Event event;
+		while (window.pollEvent(event)) {
+			if (event.type == sf::Event::Closed)  {
+				running = false;
+			} else if (event.type == sf::Event::Resized) {
+				glViewport(0, 0, event.size.width, event.size.height);
 				width = event.size.width;
 				height = event.size.height;
 				updateProjection();
-            } else if (event.type == sf::Event::MouseWheelMoved) {
+			} else if (event.type == sf::Event::MouseWheelMoved) {
 				scale = std::max(scale * (1.0f + 0.1f * event.mouseWheel.delta), 1.f);
 				updateProjection();
 			} else if (event.type == sf::Event::KeyPressed) {
@@ -178,7 +178,7 @@ int main() {
 					default: break;
 				}
 			}
-        }
+		}
 
 		if (lockMouse) {
 			const int middleX = width / 2;
@@ -189,15 +189,15 @@ int main() {
 			shader.set("viewMat", player.getViewMatrix());
 		}
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		for (auto& m : renderables) 
 			m.render(shader);
 
-        window.display();
+		window.display();
 
 		const auto finish = std::chrono::high_resolution_clock::now();
 		std::this_thread::sleep_for(frameTime - (finish - start));
-    }
-    return 0;
+	}
+	return 0;
 }
