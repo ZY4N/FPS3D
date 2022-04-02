@@ -34,7 +34,7 @@ int main() {
 	int width = 1280;
 	int height = 720;
 
-	sf::Window window(sf::VideoMode(width, height), "FPS3D", sf::Style::Default);
+	sf::Window window(sf::VideoMode(width, height), "FPS3D", sf::Style::Default, sf::ContextSettings(24, 8, 2, 4, 6));
 	window.setVerticalSyncEnabled(true);
 	window.setActive(true);
 
@@ -64,17 +64,23 @@ int main() {
 	
 	std::cout << "using: " << glGetString(GL_RENDERER) << std::endl;
 
-	glClearDepth(1.f);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glEnable(GL_DEPTH_TEST); 
 	glDepthFunc(GL_LESS);
-
-	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CCW);
-	glCullFace(GL_BACK);
+	glClearDepth(1.f);
 
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	std::cout << window.getSettings().depthBits << std::endl;
+	//std::cout << window.getSettings().majorVersion << std::endl;
+	//std::cout << window.getSettings().minorVersion << std::endl;
 
 	window.display();
 
@@ -107,6 +113,7 @@ int main() {
 
 	updateProjection();
 
+	// not a great solution but works for now... 
 	shader.set("colorMerge", 0.0f);
 	shader.set("meshColor", glm::fvec4{ 1.0f, 0.0f, 1.0f, 1.0f });
 

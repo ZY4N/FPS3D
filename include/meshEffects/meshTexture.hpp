@@ -29,7 +29,7 @@ struct meshTexture : public meshEffect {
 	meshTexture& operator=(const meshTexture&) = delete;
 
 	~meshTexture() {
-		glActiveTexture(GL_NONE);
+		//glActiveTexture(GL_NONE);
 		glDeleteTextures(1, &textureID);
 	}
 

@@ -32,22 +32,16 @@ void camera::update(float deltaT, int dx, int dy) {
 	pitch -= dy * mouseSensitivity * deltaT;
 
 	yaw = fmod(yaw, 2 * M_PI);
-	pitch = std::min(std::max(pitch, (float)-M_PI), (float)M_PI);
+	static constexpr float maxAngle = (M_PI / 2.0f) - glm::epsilon<float>();
+	pitch = std::min(std::max(pitch, -maxAngle), maxAngle);
 
 	glm::vec3 acceleration(0.f, 0.f, 0.f);
 	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-		acceleration += front;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-		acceleration -= front;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-		acceleration -= right;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-		acceleration += right;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-		acceleration += worldUp;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
-		acceleration -= worldUp;
+	using kb = sf::Keyboard;
+	static const glm::fvec3 noMove{ 0, 0, 0 }; 
+	acceleration += kb::isKeyPressed(kb::W) ? front : kb::isKeyPressed(kb::S) ? -front : noMove;
+	acceleration += kb::isKeyPressed(kb::D) ? right : kb::isKeyPressed(kb::A) ? -right : noMove;
+	acceleration += kb::isKeyPressed(kb::Space) ? worldUp : kb::isKeyPressed(kb::LControl) ? -worldUp : noMove;
 	
 	if (glm::length(acceleration) > glm::epsilon<float>())
 		velocity += glm::normalize(acceleration);
@@ -58,7 +52,7 @@ void camera::update(float deltaT, int dx, int dy) {
 	if (speed > maxSpeed)
 		velocity *= maxSpeed / speed;
 
-	const float speedBonus = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 2.f : 1.f;
+	const float speedBonus = kb::isKeyPressed(kb::LShift) ? 2.f : 1.f;
 	position += velocity * speedBonus * deltaT;
 
 	updateMatrix();
