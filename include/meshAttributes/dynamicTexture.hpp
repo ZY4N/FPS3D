@@ -28,26 +28,16 @@ struct dynamicTexture : public attribute {
 	}
 
 	~dynamicTexture() {
+		glActiveTexture(GL_NONE);
 		glDeleteTextures(1, &textureID);
-	}
-
-	inline void init(
-		const GLuint vertexBufferID,
-		const GLuint indexBufferID,
-		const size_t stride,
-		const size_t byteOffset
-	) override {
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	inline void preRender(shader& s) override {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureID);
 	}
+
 	inline void postRender(shader& s) override {
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glActiveTexture(GL_NONE);
 	}
 };

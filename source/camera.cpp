@@ -19,9 +19,8 @@ camera::camera(const glm::vec3& position, const glm::vec3& direction, const glm:
 	yaw = -90.f;
 	roll = 0.f;
 
-	calculateVectors();
+	updateMatrix();
 }
-
 
 void camera::update(float deltaT, int dx, int dy) {
 
@@ -61,9 +60,11 @@ void camera::update(float deltaT, int dx, int dy) {
 
 	const float speedBonus = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 2.f : 1.f;
 	position += velocity * speedBonus * deltaT;
+
+	updateMatrix();
 }
 
-void camera::calculateVectors() {
+void camera::updateMatrix() {
 	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	front.y = sin(glm::radians(pitch));
 	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -71,9 +72,10 @@ void camera::calculateVectors() {
 	front = glm::normalize(front);
 	right = glm::normalize(glm::cross(front, worldUp));
 	up = glm::normalize(glm::cross(right, front));
+
+	matrix = glm::lookAt(position, position + front, up);
 }
 
 const glm::mat4 camera::getViewMatrix() {
-	calculateVectors();
-	return matrix = glm::lookAt(position, position + front, up);
+	return matrix;
 }

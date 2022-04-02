@@ -11,15 +11,14 @@ struct dynamicColor : public attribute {
 	glm::fvec4 c;
 
 	dynamicColor(const glm::fvec4& theColor) : c{ theColor }{
-		//std::cout << glm::to_string(c) << std::endl;
-		c += glm::fvec4{ 0.2, 0.2, 0.2, 0.2 };
+		c += glm::fvec4{ 0.2, 0.2, 0.2, 0.2 }; // just for debugging
 	} 
 
 	inline void preRender(shader& s) override {
-		//s.set("colorMerge", 1.0f);
-		//s.set("meshColor", c);
+		s.set("colorMerge", 1.0f);
+		s.set("meshColor", c);
 	}
 	inline void postRender(shader& s) override {
-		//s.set("colorMerge", 0.0f);
+		s.set("colorMerge", 0.0f);
 	}
 };

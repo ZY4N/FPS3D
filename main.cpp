@@ -11,31 +11,23 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 
-#include <MeshLoader.hpp>
+#include <MeshLoaderImpl.hpp>
 #include <mesh.hpp>
 #include <meshAttributes.hpp>
 #include <shader.hpp>
 #include <camera.hpp>
-/*
+
 // 🍝
 extern "C" char _binary_vertex_glsl_start;
 extern "C" char _binary_vertex_glsl_end;
 
 extern "C" char _binary_fragment_glsl_start;
 extern "C" char _binary_fragment_glsl_end;
-*/
 
-struct smth {
-	vertex2D v2;
-	uint32_t something;
-};
+
+using defaultMesh = mesh<vertex_comps::texCoord, vertex_comps::normal>;
 
 int main() {
-	smth arr[3];
-
-	constexpr auto sizeElem = sizeof(smth);
-	constexpr auto sizeArr = sizeof(arr);
-
 	int width = 1280;
 	int height = 720;
 
@@ -48,22 +40,43 @@ int main() {
 		return -1;
 	}
 	
-	std::cout << glGetString(GL_VENDOR) << std::endl;
-	std::cout << glGetString(GL_RENDERER) << std::endl;
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback([](
+			GLenum source,
+			GLenum type,
+			GLuint id,
+			GLenum severity,
+			GLsizei length,
+			const GLchar* message,
+			const void* userParam
+		) {
+			fprintf(
+				stderr, "GL_MSG: %s type: 0x%x, severity: 0x%x, msg: %s\n",
+				(type == GL_DEBUG_TYPE_ERROR ? "ERROR" : "" ),
+				type, severity, message
+			);
+		},
+		0
+	);
+	
+	std::cout << "using: " << glGetString(GL_RENDERER) << std::endl;
 
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	window.display();
-	/*
+
+	
 	shader shader = shader::shaderFromOBJ(
 		&_binary_vertex_glsl_start, &_binary_vertex_glsl_end,
 		&_binary_fragment_glsl_start, &_binary_fragment_glsl_end
 	);
-	*/
+	
+	/*
 	shader shader = shader::loadShader(
 		"/home/zy4n/Documents/Code/C++/FPS3D/shaders/vertex.glsl",
 		"/home/zy4n/Documents/Code/C++/FPS3D/shaders/fragment.glsl"
 	);
+	*/
 
 	float scale = 1;
 
@@ -72,7 +85,7 @@ int main() {
 		shader.set("projectionMat", glm::perspective(
 			halfPi / scale,
 			(float)width / height,
-			0.1f, 100000.0f
+			0.1f, 1000.0f
 		));	
 	};
 
@@ -80,7 +93,6 @@ int main() {
 	
 	camera player({ 0, 0, 0 }, { 0, 0, 1 } , { 0, 1, 0 });
 
-	
 	glClearDepth(1.f);
 	glClearColor(0.f, 0.f, 0.f, 0.f);
 
@@ -91,31 +103,31 @@ int main() {
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
 
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
 	shader.set("colorMerge", 0.0f);
 	shader.set("meshColor", glm::fvec4{ 1.0f, 0.0f, 1.0f, 1.0f });
 	//shader.set("rayDirection", glm::fvec3{ 1.0f, 1.0f, 1.0f});
 
-	std::vector<mesh> meshes;
-
+	std::vector<defaultMesh> meshes;
 	
 	//MeshLoader::loadFromOBJ("/home/zy4n/3D/GTA/untitled.obj", meshes);
+	const auto startTimer = std::chrono::high_resolution_clock::now();
 	MeshLoader::loadFromOBJ("/home/zy4n/3D/amongusOBJ/amongus.obj", meshes);
+	const auto endTimer = std::chrono::high_resolution_clock::now();
+	std::cout << (endTimer - startTimer).count() << std::endl;
 	//MeshLoader::loadFromOBJ("/home/zy4n/3D/totem.obj", meshes);
 	//MeshLoader::loadFromOBJ("/home/zy4n/3D/the-utah-teapot/source/toll/teapot.obj", meshes);
 	//MeshLoader::loadFromOBJ("/home/zy4n/3D/box.obj/untitled.obj", meshes);
 	//MeshLoader::loadFromOBJ("/home/zy4n/3D/test.obj", meshes);
 	
 	static constexpr float modelScale = 5.0f;
+	const auto transform = glm::scale(
+		glm::identity<glm::mat4x4>(),
+		{ modelScale, modelScale, modelScale }
+	);
 	std::vector<meshInstance> renderables;
-	for (const mesh& m : meshes) {
-		renderables.push_back(m.getInstance(
-			glm::scale(
-				glm::identity<glm::mat4x4>(),
-				{ modelScale, modelScale, modelScale }
-			)
-		));
+	for (defaultMesh& m : meshes) {
+		m.initVAO();
+		renderables.push_back(m.getInstance(transform));
 	}
 
 	std::cout << "finished loading mesh\n";
@@ -141,7 +153,7 @@ int main() {
 				height = event.size.height;
 				updateProjection();
             } else if (event.type == sf::Event::MouseWheelMoved) {
-				scale = std::max(scale * (1 + (event.mouseWheel.delta > 0 ? 0.1f : -0.1f)), 1.f);
+				scale = std::max(scale * (1.0f + 0.1f * event.mouseWheel.delta), 1.f);
 				updateProjection();
 			} else if (event.type == sf::Event::KeyPressed) {
 				switch (event.key.code) {
@@ -171,6 +183,5 @@ int main() {
 		const auto finish = std::chrono::high_resolution_clock::now();
 		std::this_thread::sleep_for(frameTime - (finish - start));
     }
-	
     return 0;
 }

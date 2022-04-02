@@ -69,7 +69,7 @@ shader shader::loadShader(
 template<shaderSourceType... Ts>
 shader shader::createShader(Ts... shaderSources) {
 	
-	std::array<GLint, 3> shaderIDs; 
+	std::array<GLint, 3> shaderIDs{ 0, 0, 0 }; 
 	GLuint programID = glCreateProgram(); 
 
 	auto shaderID = shaderIDs.begin();
@@ -95,7 +95,9 @@ shader shader::createShader(Ts... shaderSources) {
 	glUseProgram(0);
 
 	for (auto shaderID : shaderIDs) {
-		glDeleteShader(shaderID);
+		if (shaderID) {
+			glDeleteShader(shaderID);
+		}
 	}
 
 	return shader(programID);

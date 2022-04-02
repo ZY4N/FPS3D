@@ -9,7 +9,7 @@ class camera {
 public:
 	camera(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& worldUp);
 
-	void calculateVectors();
+	void updateMatrix();
 
 	void update(float deltaT, int dx, int dy);
 

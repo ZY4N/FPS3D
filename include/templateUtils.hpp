@@ -21,7 +21,6 @@ constexpr void constexpr_indexed_for(F&& f, Arg&& arg, Args&&... args) {
 	}
 }
 
-
 template<typename T, typename... Ts>
 static constexpr bool any_of() {
 	return (std::is_same<T, Ts>::value || ...);

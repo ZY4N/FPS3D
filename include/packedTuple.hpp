@@ -32,7 +32,12 @@ struct packedTuple {
 		}
 	}
 
-	static constexpr int offsetOf(int i) const {
+	static constexpr size_t sizeOf(int i) {
+		constexpr int sizes[]{ sizeof(Ts)... };
+		return sizes[i];
+	}
+
+	static constexpr size_t offsetOf(int i) {
 		constexpr auto offsets = getOffsets<Ts...>();
 		return offsets[i];
 	}

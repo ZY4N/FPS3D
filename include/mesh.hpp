@@ -19,17 +19,25 @@
 template<vertex_comp... Cs>
 class mesh {
 public:
-	using vertex = packedTuple<vertex_comps::position, Cs...>;
-
-	mesh(std::vector<vertex>&& vertexBuffer, std::vector<u16>&& indexBuffer);
+	using vertex = packedTuple<vertex_comps::position::type, typename Cs::type...>;
 	
+	mesh(
+		std::vector<typename mesh<Cs...>::vertex>&& vertices,
+		std::vector<u16>&& indices
+	);
+	
+	mesh(
+		const std::vector<typename mesh<Cs...>::vertex>& vertices,
+		const std::vector<u16>& indices
+	);
+	
+	mesh(const mesh<Cs...>& other);
+	mesh(mesh<Cs...>&& other);
+
+	mesh<Cs...>& operator=(const mesh<Cs...>& other);
+	mesh<Cs...>& operator=(mesh<Cs...>&& other);
+
 	~mesh();
-
-	mesh(const mesh<Cs...>&);
-	mesh(mesh<Cs...>&&);
-	
-	mesh<Cs...>& operator=(const mesh<Cs...>&);
-	mesh<Cs...>& operator=(mesh<Cs...>&&);
 
 	void initVAO();
 

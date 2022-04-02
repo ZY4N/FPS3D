@@ -8,39 +8,31 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
-//mtllib default.mtl
 
 constexpr auto BUFFER_SIZE = 16 * 1024;
 
-void MeshLoader::loadFromOBJ(const std::string& filename, std::vector<mesh>& destination) {
+template<vertex_comp... Cs>
+void MeshLoader::loadFromOBJ(const std::string& filename, std::vector<mesh<Cs...>>& destination) {
 
 	//temporary storage for parsing
-	std::vector<vertex3D> vertices, normals;
-	std::vector<vertex2D> texCoords;
+	std::vector<vertex3D> vertices{ { 0.f, 0.f, 0.f } };
+	std::vector<vertex3D> normals{ { 0.f, 0.f, 0.f } };
+	std::vector<vertex2D> texCoords{ { 0.f, 0.f } };
 	std::vector<material> materials;
 	
 	//the final buffers for the gpu
-	std::vector<u8> vertexBuffer;
+	std::vector<typename mesh<Cs...>::vertex> vertexBuffer;
 	std::vector<u16> indexBuffer;
 
 	//vertex combinations for indexing
-#ifdef SORTED_IMPLEMENTATION
-	std::vector<indexedVertexID> vertexIDs;
-#else
-	std::vector<vertexID> vertexIDs;
-#endif
+	std::vector<indexedVertexID<Cs...>> vertexIDs;
 
-	bool hasTexCoords, hasNormals;
 	size_t materialIndex = -1;
-	size_t stride = -1;
-	char parsing = -1, parsed = -1;
 
 	const auto createMesh = [&]() {
 		if (vertexBuffer.size() > 0) {
-			mesh newMesh = (hasTexCoords ?
-				(hasNormals ? mesh::createMesh<vertex2D, vertex3D> : mesh::createMesh<vertex2D>) :
-				(hasNormals ? mesh::createMesh<vertex3D> : mesh::createMesh<>)
-			)(vertexBuffer, indexBuffer);
+			//auto& newMesh = destination.emplace_back(std::move(vertexBuffer), std::move(indexBuffer));
+			auto& newMesh = destination.emplace_back(vertexBuffer, indexBuffer);
 
 			if (materialIndex != -1) {
 				const auto& mtl = materials[materialIndex];
@@ -48,18 +40,14 @@ void MeshLoader::loadFromOBJ(const std::string& filename, std::vector<mesh>& des
 					newMesh.addAttribute(mtl.colorAttribute);
 				if (mtl.textureAttribute)
 					newMesh.addAttribute(mtl.textureAttribute);
-			}
-
-			destination.push_back(std::move(newMesh));
-			
-			//std::cout << "found " << (vertexBuffer.size() / stride) << " vertices\n";
+			}	
 		}
 
 		vertexBuffer.clear();
 		indexBuffer.clear();
 		vertexIDs.clear();
 
-		materialIndex = stride = -1;
+		materialIndex = -1;
 	};
 
 	namespace fs = std::filesystem;
@@ -87,30 +75,14 @@ void MeshLoader::loadFromOBJ(const std::string& filename, std::vector<mesh>& des
 			normals.emplace_back(x, y, z);
 		}},
 		parser{ "f ", [&](const char* begin, const char* end){
-			// parse face structure on first face
-			if (stride == -1) {
-				int index = 0;
-				hasTexCoords = hasNormals = false;
-				for (const char* c = begin; c <= end; c++) {
-					if (*c == '/') {
-						index++;
-					} else if (*c == ' ') {
-						break;
-					} else if (index == 1) {
-						hasTexCoords = true;
-					} else if (index == 2) {
-						hasNormals = true;
-					}
-				}
-				stride = sizeof(vertex3D) +
-					(hasTexCoords ? sizeof(vertex2D) : 0) +
-					(hasNormals ? sizeof(vertex3D) : 0); 
-			}
-
 			u32 firstIndex, prevIndex, compIndex = 0;
 
-			//index for position, texCoord, normal 
-			u32 indices[3]{ 0, 0, 0 };
+			// index for position and all the vertex components
+			u32 indices[(1 + ... + sizeof(Cs))];
+
+			// indices are set to 0 so if the obj does not hold data
+			// for that component the fallback component at index 0 is used
+			std::memset(indices, 0, sizeof(indices));
 
 			size_t charIndex = 0;
 			const char* reader = begin;
@@ -119,48 +91,33 @@ void MeshLoader::loadFromOBJ(const std::string& filename, std::vector<mesh>& des
 
 					u32 index;
 
-#ifdef SORTED_IMPLEMENTATION
-					indexedVertexID vID { indices[0], indices[1], indices[2], 0 };
+					indexedVertexID<Cs...> vID(indices);
 					const auto it = std::upper_bound(vertexIDs.begin(), vertexIDs.end(), vID);
 
 					if (it > vertexIDs.begin() && *(it - 1) == vID) {
 						index = (it - 1)->bufferIndex;
 					} else {
-						index = vID.bufferIndex = vertexBuffer.size() / stride;
+						
+						index = vID.bufferIndex = vertexBuffer.size();
 						vertexIDs.insert(it, vID);
-						
-						const auto push = [&vertexBuffer]<typename T>(const T& data) {
-							vertexBuffer.insert(vertexBuffer.end(), (u8*)&data, (u8*)&data + sizeof(T));
-						};
-					
-						vertices.reserve(stride);
-						push(vertices[indices[0]]);
-						if (hasTexCoords)
-							push(texCoords[indices[1]]);
-						if (hasNormals)
-							push(normals[indices[2]]);
-					}
-#else			
-					vertexID vID { indices[0], indices[1], indices[2] };
-					auto it = std::find(vertexIDs.begin(), vertexIDs.end(), vID);
-					if (it == vertexIDs.end()) {
-						index = vertexIDs.size();
-						vertexIDs.push_back(vID);
 
-						const auto push = [&vertexBuffer]<typename T>(const T& data) {
-							vertexBuffer.insert(vertexBuffer.end(), (u8*)&data, (u8*)&data + sizeof(T));
+						u8* vertexData = vertexBuffer.emplace_back().data;
+						size_t byteOffset = 0;
+
+						const auto push = [&vertexData, &byteOffset]<typename T>(const T& value) {
+							std::memcpy(vertexData + byteOffset, (u8*)&value, sizeof(T));
+							byteOffset += sizeof(T);
 						};
-						
-						vertices.reserve(stride);
+
 						push(vertices[indices[0]]);
-						if (hasTexCoords)
+					
+						if constexpr (any_of<vertex_comps::texCoord, Cs...>)
 							push(texCoords[indices[1]]);
-						if (hasNormals)
+
+						if constexpr (any_of<vertex_comps::normal, Cs...>)
 							push(normals[indices[2]]);
-					} else {
-						index = it - vertexIDs.begin();
+
 					}
-#endif
 
 					if (vertexindex >= 2) {
 						indexBuffer.reserve(3);
@@ -179,7 +136,7 @@ void MeshLoader::loadFromOBJ(const std::string& filename, std::vector<mesh>& des
 					reader++;
 				} else {
 					char* next;
-					indices[compIndex] = strtol(reader, &next, 10) - 1;
+					indices[compIndex] = strtol(reader, &next, 10);
 					reader = next;
 				}
 			}

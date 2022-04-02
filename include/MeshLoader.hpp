@@ -3,12 +3,10 @@
 #include <string>
 #include <intX.hpp>
 #include <texture.hpp>
-#include <mesh.hpp>
+#include <meshImpl.hpp>
 #include <meshAttributes.hpp>
 #include <cstring>
 #include <utils.hpp>
-
-#define SORTED_IMPLEMENTATION
 
 struct material {
 	std::string name;
@@ -17,28 +15,33 @@ struct material {
 	material(const std::string& str) : name{ str } {}
 };
 
+template<vertex_comp... Cs>
 struct vertexID {
-	u32 positionIndex, texCoordIndex, normalIndex;
+	u32 indices[sizeof...(Cs)];
 	friend auto operator<=>(const vertexID&, const vertexID&) = default;
 };
 
-#ifdef SORTED_IMPLEMENTATION
+template<vertex_comp... Cs>
 struct indexedVertexID {
-	vertexID indices;
-	u32 bufferIndex;
+	vertexID<vertex_comps::position, Cs...> id;
+	u32 bufferIndex{ (u32)-1 };
+
+	indexedVertexID(u32* indices) {
+		std::memcpy(id.indices, indices, (1 + ... + sizeof(Cs)));
+	}
+
 	friend auto operator<=>(const indexedVertexID& a, const indexedVertexID& b) {
-		return a.indices <=> b.indices;
+		return a.id <=> b.id;
 	}
 	bool operator==(const indexedVertexID& other) const noexcept {
-		return other.indices == indices;
+		return other.id == id;
 	}
 };
-#endif
-
 
 namespace MeshLoader {
 
-	void loadFromOBJ(const std::string& filename, std::vector<mesh>& destination);
+	template<vertex_comp... Cs>
+	void loadFromOBJ(const std::string& filename, std::vector<mesh<Cs...>>& destination);
 
 	void parseMTL(const std::string& filename, const std::string& directory, std::vector<material>& materials);
 
