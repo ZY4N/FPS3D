@@ -101,12 +101,12 @@ void mesh<Cs...>::initVAO() {
 }
 
 template<vertex_comp... Cs>
-void mesh<Cs...>::addAttribute(mesh_attr::attribute* attr) {
+void mesh<Cs...>::addAttribute(meshEffect* attr) {
 	attributes.push_back(attr);
 }
 
 template<vertex_comp... Cs>
-void mesh<Cs...>::removeAttribute(mesh_attr::attribute* attr) {
+void mesh<Cs...>::removeAttribute(meshEffect* attr) {
 	attributes.erase(std::find(attributes.begin(), attributes.end(), attr));
 }
 

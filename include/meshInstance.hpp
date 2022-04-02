@@ -1,13 +1,12 @@
 #pragma once
+
 #include <GL/glew.h> 
 #include <SFML/OpenGL.hpp>
 
 #include <intX.hpp>
-#include <meshAttributes.hpp>
-#include <utils.hpp>
+#include <meshEffect.hpp>
 #include <shader.hpp>
 
-#include <iostream>
 #include <vector>
 
 #include <glm/mat4x4.hpp>
@@ -19,24 +18,24 @@ struct meshInstance {
 	GLuint vba;
 	size_t numIndices;
 	glm::mat4x4 transform;
-	std::vector<mesh_attr::attribute*> attributes;
+	std::vector<meshEffect*> attributes;
 	
 	meshInstance(
 		GLuint vba,
 		size_t numIndices,
 		const glm::mat4x4& transform,
-		const std::vector<mesh_attr::attribute*>& attributes
+		const std::vector<meshEffect*>& attributes
 	) : vba{ vba },
 		numIndices{ numIndices },
 		transform{ transform },
 		attributes{ attributes }
 	{}
 
-	void addAttribute(mesh_attr::attribute* attr) {
+	void addAttribute(meshEffect* attr) {
 		attributes.push_back(attr);
 	}
 
-	void removeAttribute(mesh_attr::attribute* attr) {
+	void removeAttribute(meshEffect* attr) {
 		attributes.erase(std::find(attributes.begin(), attributes.end(), attr));
 	}
 

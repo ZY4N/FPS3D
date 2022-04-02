@@ -7,12 +7,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <intX.hpp>
-#include <utils.hpp>
 #include <primitives.hpp>
 #include <packedTuple.hpp>
 #include <vertex_comp.hpp>
 
-#include <meshAttributes.hpp>
+#include <meshEffects.hpp>
 #include <meshInstance.hpp>
 #include <shader.hpp>
 
@@ -25,7 +24,7 @@ public:
 		std::vector<typename mesh<Cs...>::vertex>&& vertices,
 		std::vector<u16>&& indices
 	);
-	
+
 	mesh(
 		const std::vector<typename mesh<Cs...>::vertex>& vertices,
 		const std::vector<u16>& indices
@@ -41,9 +40,9 @@ public:
 
 	void initVAO();
 
-	void addAttribute(mesh_attr::attribute* attr);
+	void addAttribute(meshEffect* attr);
 
-	void removeAttribute(mesh_attr::attribute* attr);
+	void removeAttribute(meshEffect* attr);
 
 	meshInstance getInstance(const glm::mat4x4 modelMatrix = glm::identity<glm::mat4x4>()) const;
 
@@ -51,7 +50,7 @@ protected:
 
 	std::vector<vertex> vertices;
 	std::vector<u16> indices;
-	std::vector<mesh_attr::attribute*> attributes;
+	std::vector<meshEffect*> attributes;
 	
 	GLuint vertexBufferID{ 0 };
 	GLuint indexBufferID{ 0 };

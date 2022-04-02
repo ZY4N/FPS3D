@@ -1,16 +1,15 @@
 #pragma once
 
 #include <primitives.hpp>
-#include <meshAttribute.hpp>
+#include <meshEffect.hpp>
 
 #include <glm/gtx/string_cast.hpp>
 
-using namespace mesh_attr;
 
-struct dynamicColor : public attribute {
+struct meshColor : public meshEffect {
 	glm::fvec4 c;
 
-	dynamicColor(const glm::fvec4& theColor) : c{ theColor }{
+	meshColor(const glm::fvec4& theColor) : c{ theColor }{
 		c += glm::fvec4{ 0.2, 0.2, 0.2, 0.2 }; // just for debugging
 	} 
 

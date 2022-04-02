@@ -1,24 +1,27 @@
 
- #include <MeshLoader.hpp>
+#pragma once
+
+#include <MeshLoader.hpp>
 
 #include <filesystem>
 #include <vector>
-#include <unordered_map>
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
-#include <iostream>
+#include <fileParser.hpp>
 
 constexpr auto BUFFER_SIZE = 16 * 1024;
 
 template<vertex_comp... Cs>
-void MeshLoader::loadFromOBJ(const std::string& filename, std::vector<mesh<Cs...>>& destination) {
+void MeshLoader::loadFromOBJ(
+	const std::string& filename, std::vector<mesh<Cs...>>& meshes,
+	std::vector<material>& materials
+) {
 
 	//temporary storage for parsing
 	std::vector<vertex3D> vertices{ { 0.f, 0.f, 0.f } };
 	std::vector<vertex3D> normals{ { 0.f, 0.f, 0.f } };
 	std::vector<vertex2D> texCoords{ { 0.f, 0.f } };
-	std::vector<material> materials;
 	
 	//the final buffers for the gpu
 	std::vector<typename mesh<Cs...>::vertex> vertexBuffer;
@@ -32,7 +35,7 @@ void MeshLoader::loadFromOBJ(const std::string& filename, std::vector<mesh<Cs...
 	const auto createMesh = [&]() {
 		if (vertexBuffer.size() > 0) {
 			//auto& newMesh = destination.emplace_back(std::move(vertexBuffer), std::move(indexBuffer));
-			auto& newMesh = destination.emplace_back(vertexBuffer, indexBuffer);
+			auto& newMesh = meshes.emplace_back(vertexBuffer, indexBuffer);
 
 			if (materialIndex != -1) {
 				const auto& mtl = materials[materialIndex];
@@ -163,7 +166,7 @@ void MeshLoader::parseMTL(const std::string& filename, const std::string& direct
 	
 	parseFile<BUFFER_SIZE>(filename,
 		parser{ "map_Kd ", [&](const char* begin, const char* end){
-			mtl->textureAttribute = new dynamicTexture(texture::load(directory + std::string(begin, end + 1), 4));	
+			mtl->textureAttribute = new meshTexture(texture::load(directory + std::string(begin, end + 1), 4));	
 		}},
 		parser{ "Kd ", [&](const char* begin, const char* end){
 			char* next;
@@ -177,14 +180,14 @@ void MeshLoader::parseMTL(const std::string& filename, const std::string& direct
 			if (mtl->colorAttribute) {
 				mtl->colorAttribute->c = c;
 			} else {
-				mtl->colorAttribute = new dynamicColor(c);
+				mtl->colorAttribute = new meshColor(c);
 			}	
 		}},
 		parser{ "d ", [&](const char* begin, const char* end){
 			char* next;
 			float alpha = std::strtof(begin, &next);
 			if (mtl->colorAttribute) {
-				mtl->colorAttribute = new dynamicColor(glm::fvec4{ 0, 0, 0, alpha });
+				mtl->colorAttribute = new meshColor(glm::fvec4{ 0, 0, 0, alpha });
 			} else {
 				mtl->colorAttribute->c.a = alpha;
 			}	

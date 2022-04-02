@@ -4,15 +4,39 @@
 #include <intX.hpp>
 #include <texture.hpp>
 #include <meshImpl.hpp>
-#include <meshAttributes.hpp>
+#include <meshEffects.hpp>
 #include <cstring>
-#include <utils.hpp>
 
 struct material {
-	std::string name;
-	dynamicColor* colorAttribute{ nullptr };
-	dynamicTexture* textureAttribute{ nullptr };
+	std::string name; //should not be in here 
+	meshColor* colorAttribute{ nullptr };
+	meshTexture* textureAttribute{ nullptr };
 	material(const std::string& str) : name{ str } {}
+	~material() {
+		delete colorAttribute;
+		delete textureAttribute;
+	}
+	material(const material&) = delete;
+	material& operator=(const material&) = delete;
+
+	material(material&& other) :
+		name{ other.name },
+		colorAttribute{ other.colorAttribute },
+		textureAttribute{ other.textureAttribute }
+	{
+		other.colorAttribute = nullptr;
+		other.textureAttribute = nullptr;
+	}
+
+	material& operator=(material&& other) {	
+		name = std::move(other.name);
+		colorAttribute = std::move(other.colorAttribute);
+		textureAttribute = std::move(other.textureAttribute);
+		other.colorAttribute = nullptr;
+		other.textureAttribute = nullptr;
+		return *this;
+	}
+
 };
 
 template<vertex_comp... Cs>
@@ -41,7 +65,7 @@ struct indexedVertexID {
 namespace MeshLoader {
 
 	template<vertex_comp... Cs>
-	void loadFromOBJ(const std::string& filename, std::vector<mesh<Cs...>>& destination);
+	void loadFromOBJ(const std::string& filename, std::vector<mesh<Cs...>>& destination, std::vector<material>& materials);
 
 	void parseMTL(const std::string& filename, const std::string& directory, std::vector<material>& materials);
 

@@ -13,7 +13,7 @@
 
 #include <MeshLoaderImpl.hpp>
 #include <mesh.hpp>
-#include <meshAttributes.hpp>
+#include <meshEffects.hpp>
 #include <shader.hpp>
 #include <camera.hpp>
 
@@ -28,6 +28,8 @@ extern "C" char _binary_fragment_glsl_end;
 using defaultMesh = mesh<vertex_comps::texCoord, vertex_comps::normal>;
 
 int main() {
+
+	//----------------------[ window + opengl setup ]----------------------//
 	int width = 1280;
 	int height = 720;
 
@@ -61,10 +63,24 @@ int main() {
 	
 	std::cout << "using: " << glGetString(GL_RENDERER) << std::endl;
 
+	glClearDepth(1.f);
+	
+	glEnable(GL_DEPTH_TEST); 
+	glDepthFunc(GL_LESS);
+
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CCW);
+	glCullFace(GL_BACK);
+
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	window.display();
 
+	glClearColor(0.f, 0.f, 0.f, 0.f);
+
+	
+	//----------------------[ shader setup ]----------------------//
 	
 	shader shader = shader::shaderFromOBJ(
 		&_binary_vertex_glsl_start, &_binary_vertex_glsl_end,
@@ -79,7 +95,6 @@ int main() {
 	*/
 
 	float scale = 1;
-
 	const auto updateProjection = [&](){
 		static constexpr float halfPi = M_PI / 2.f;
 		shader.set("projectionMat", glm::perspective(
@@ -90,35 +105,29 @@ int main() {
 	};
 
 	updateProjection();
-	
-	camera player({ 0, 0, 0 }, { 0, 0, 1 } , { 0, 1, 0 });
-
-	glClearDepth(1.f);
-	glClearColor(0.f, 0.f, 0.f, 0.f);
-
-	glEnable(GL_DEPTH_TEST); 
-	glDepthFunc(GL_LESS);
-
-	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CCW);
-	glCullFace(GL_BACK);
 
 	shader.set("colorMerge", 0.0f);
 	shader.set("meshColor", glm::fvec4{ 1.0f, 0.0f, 1.0f, 1.0f });
-	//shader.set("rayDirection", glm::fvec3{ 1.0f, 1.0f, 1.0f});
+
+	//----------------------[ mesh loading ]----------------------//
 
 	std::vector<defaultMesh> meshes;
+	std::vector<material> materials;
+
+	const auto time = []<typename F>(F&& f) {
+		const auto start = std::chrono::high_resolution_clock::now();
+		f();
+		const auto end = std::chrono::high_resolution_clock::now();
+		std::cout << (end - start).count() << "ns" << std::endl;
+	};
 	
-	//MeshLoader::loadFromOBJ("/home/zy4n/3D/GTA/untitled.obj", meshes);
-	const auto startTimer = std::chrono::high_resolution_clock::now();
-	MeshLoader::loadFromOBJ("/home/zy4n/3D/amongusOBJ/amongus.obj", meshes);
-	const auto endTimer = std::chrono::high_resolution_clock::now();
-	std::cout << (endTimer - startTimer).count() << std::endl;
-	//MeshLoader::loadFromOBJ("/home/zy4n/3D/totem.obj", meshes);
-	//MeshLoader::loadFromOBJ("/home/zy4n/3D/the-utah-teapot/source/toll/teapot.obj", meshes);
-	//MeshLoader::loadFromOBJ("/home/zy4n/3D/box.obj/untitled.obj", meshes);
-	//MeshLoader::loadFromOBJ("/home/zy4n/3D/test.obj", meshes);
-	
+	//time([&]() { MeshLoader::loadFromOBJ("/home/zy4n/3D/GTA/untitled.obj", meshes, materials); });
+	time([&]() { MeshLoader::loadFromOBJ("/home/zy4n/3D/amongusOBJ/amongus.obj", meshes, materials); });
+	//time([&]() { MeshLoader::loadFromOBJ("/home/zy4n/3D/totem.obj", meshes, materials); });
+	//time([&]() { MeshLoader::loadFromOBJ("/home/zy4n/3D/the-utah-teapot/source/toll/teapot.obj", meshes, materials); });
+	//time([&]() { MeshLoader::loadFromOBJ("/home/zy4n/3D/box.obj/untitled.obj", meshes, materials); });
+	//time([&]() { MeshLoader::loadFromOBJ("/home/zy4n/3D/test.obj", meshes, materials); });
+
 	static constexpr float modelScale = 5.0f;
 	const auto transform = glm::scale(
 		glm::identity<glm::mat4x4>(),
@@ -131,6 +140,8 @@ int main() {
 	}
 
 	std::cout << "finished loading mesh\n";
+
+	camera player({ 0, 0, 0 }, { 0, 0, 1 } , { 0, 1, 0 });
 
 	constexpr auto FPS = 60;
 	constexpr auto frameTime = std::chrono::microseconds(int(1000000.0f / FPS));

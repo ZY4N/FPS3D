@@ -38,7 +38,7 @@
                 //"-s",
                 "-fdiagnostics-color=always",
                 "-std=c++20",
-                "-O3", //"-Ofast",
+                //"-O3",
                 "-g","${workspaceFolder}/main.cpp", "${workspaceFolder}/source/*.cpp",
                 "shaders/vertexShader.o", "shaders/fragmentShader.o",
                 "-DGL_GLEXT_PROTOTYPES",

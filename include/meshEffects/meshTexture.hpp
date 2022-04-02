@@ -4,17 +4,15 @@
 #include <SFML/OpenGL.hpp>
 #include <texture.hpp>
 
-#include "meshAttribute.hpp"
+#include <meshEffect.hpp>
 
 #include <primitives.hpp>
-#include <iostream>
 
-using namespace mesh_attr;
 
-struct dynamicTexture : public attribute {
+struct meshTexture : public meshEffect {
 	GLuint textureID;
 
-	dynamicTexture(const texture& tex) {
+	meshTexture(const texture& tex) {
 		glGenTextures(1, &textureID);
 		glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -27,7 +25,10 @@ struct dynamicTexture : public attribute {
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 
-	~dynamicTexture() {
+	meshTexture(const meshTexture&) = delete;
+	meshTexture& operator=(const meshTexture&) = delete;
+
+	~meshTexture() {
 		glActiveTexture(GL_NONE);
 		glDeleteTextures(1, &textureID);
 	}
