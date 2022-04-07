@@ -5,7 +5,7 @@
 
 #include <intX.hpp>
 #include <meshEffect.hpp>
-#include <shader.hpp>
+#include <shaderImpl.hpp>
 
 #include <vector>
 
@@ -18,48 +18,41 @@ struct meshInstance {
 	GLuint vba;
 	size_t numIndices;
 	glm::mat4x4 transform;
-	std::vector<meshEffect*> attributes;
+
+	meshColor* myColor;
+	meshTexture* myTexture;
 	
 	meshInstance(
 		GLuint vba,
 		size_t numIndices,
 		const glm::mat4x4& transform,
-		const std::vector<meshEffect*>& attributes
+		meshColor* myColor,
+		meshTexture* myTexture
 	) : vba{ vba },
 		numIndices{ numIndices },
 		transform{ transform },
-		attributes{ attributes }
+		myColor{ myColor },
+		myTexture{ myTexture }
 	{}
 
-	void addAttribute(meshEffect* attr) {
-		attributes.push_back(attr);
-	}
+	template<string_literal... Ns>
+	void render(shader<Ns...>& s) {
 
-	void removeAttribute(meshEffect* attr) {
-		attributes.erase(std::find(attributes.begin(), attributes.end(), attr));
-	}
-
-	void render(shader& s) {
-		//transform = glm::rotate(transform, 0.01f, { 1, 0, 0 });
-		//transform = glm::rotate(transform, 0.01f, { 0, 1, 0 });
-		//transform = glm::rotate(transform, 0.01f, { 0, 0, 1 });
-		s.set("modelMat", transform);
+		s.template set<"modelMat">(transform);
 
 		s.bind();
 		glBindVertexArray(vba);
 
-		for (auto attribute : attributes) {
-			attribute->preRender(s);
-			s.bind();
-		}
+		if (myColor) myColor->preRender(s);
+		if (myTexture) myTexture->preRender(s);
 
+		s.bind();
 		glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, 0);
 		
-		for (auto attribute : attributes) {
-			attribute->postRender(s);
-			s.bind();
-		}
+		if (myColor) myColor->postRender(s);
+		if (myTexture) myTexture->postRender(s);
 
+		s.bind();
 		glBindVertexArray(0);
 		s.unbind();
 	}

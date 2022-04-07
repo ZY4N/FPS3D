@@ -1,4 +1,3 @@
-
 #include <GL/glew.h> 
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
@@ -14,7 +13,7 @@
 #include <MeshLoaderImpl.hpp>
 #include <mesh.hpp>
 #include <meshEffects.hpp>
-#include <shader.hpp>
+#include <shaderImpl.hpp>
 #include <camera.hpp>
 
 // 🍝
@@ -26,6 +25,8 @@ extern "C" char _binary_fragment_glsl_end;
 
 
 using defaultMesh = mesh<vertex_comps::texCoord, vertex_comps::normal>;
+using defaultShader = shader<"projectionMat", "viewMat", "modelMat", "colorMerge", "meshColor">;
+
 
 int main() {
 
@@ -42,8 +43,8 @@ int main() {
 		std::cout << "glew initialization failed. Shuting down" << std::endl;
 		return -1;
 	}
-	
-	glEnable(GL_DEBUG_OUTPUT);
+
+	//glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback([](
 			GLenum source,
 			GLenum type,
@@ -78,10 +79,6 @@ int main() {
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	std::cout << window.getSettings().depthBits << std::endl;
-	//std::cout << window.getSettings().majorVersion << std::endl;
-	//std::cout << window.getSettings().minorVersion << std::endl;
-
 	window.display();
 
 	glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -89,22 +86,24 @@ int main() {
 	
 	//----------------------[ shader setup ]----------------------//
 	
-	shader shader = shader::shaderFromOBJ(
-		&_binary_vertex_glsl_start, &_binary_vertex_glsl_end,
-		&_binary_fragment_glsl_start, &_binary_fragment_glsl_end
+	defaultShader shader = defaultShader::createShader(
+		&_binary_vertex_glsl_start, (&_binary_vertex_glsl_end - &_binary_vertex_glsl_start) - 1,
+		"", 0,
+		&_binary_fragment_glsl_start, (&_binary_fragment_glsl_end - &_binary_fragment_glsl_start) - 1
 	);
-	
+
 	/*
 	shader shader = shader::loadShader(
 		"/home/zy4n/Documents/Code/C++/FPS3D/shaders/vertex.glsl",
 		"/home/zy4n/Documents/Code/C++/FPS3D/shaders/fragment.glsl"
 	);
 	*/
+	
 
 	float scale = 1;
 	const auto updateProjection = [&](){
 		static constexpr float halfPi = M_PI / 2.f;
-		shader.set("projectionMat", glm::perspective(
+		shader.set<"projectionMat">(glm::perspective(
 			halfPi / scale,
 			(float)width / height,
 			0.1f, 1000.0f
@@ -114,8 +113,8 @@ int main() {
 	updateProjection();
 
 	// not a great solution but works for now... 
-	shader.set("colorMerge", 0.0f);
-	shader.set("meshColor", glm::fvec4{ 1.0f, 0.0f, 1.0f, 1.0f });
+	shader.set<"colorMerge">(0.0f);
+	shader.set<"meshColor">(glm::fvec4{ 1.0f, 0.0f, 1.0f, 1.0f });
 
 
 	//----------------------[ mesh loading ]----------------------//
@@ -137,7 +136,7 @@ int main() {
 	//time([&]() { MeshLoader::loadFromOBJ("/home/zy4n/3D/box.obj/untitled.obj", meshes, materials); });
 	//time([&]() { MeshLoader::loadFromOBJ("/home/zy4n/3D/test.obj", meshes, materials); });
 
-	static constexpr float modelScale = 5.0f;
+	static constexpr float modelScale = 5.f;
 	const auto transform = glm::scale(
 		glm::identity<glm::mat4x4>(),
 		{ modelScale, modelScale, modelScale }
@@ -193,7 +192,7 @@ int main() {
 			const auto mouseDelta = sf::Mouse::getPosition(window);
 			sf::Mouse::setPosition({ middleX, middleY }, window);
 			player.update(dt, mouseDelta.x - middleX, mouseDelta.y - middleY);
-			shader.set("viewMat", player.getViewMatrix());
+			shader.set<"viewMat">(player.getViewMatrix());
 		}
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

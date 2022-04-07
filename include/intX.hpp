@@ -10,6 +10,8 @@ typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long u64;
 
+typedef unsigned long size_t;
+
 #define U8_MAX (255)
 #define U16_MAX (65535)
 #define U32_MAX (4294967295)

@@ -5,11 +5,10 @@
 #include <texture.hpp>
 
 #include <meshEffect.hpp>
-
 #include <primitives.hpp>
+#include <string_literal.hpp>
 
-
-struct meshTexture : public meshEffect {
+struct meshTexture {
 	GLuint textureID;
 
 	meshTexture(const texture& tex) {
@@ -33,12 +32,15 @@ struct meshTexture : public meshEffect {
 		glDeleteTextures(1, &textureID);
 	}
 
-	inline void preRender(shader& s) override {
+	template<string_literal... Ns>
+	inline void preRender(shader<Ns...>& s) {
+		s.template set<"colorMerge">(0.0f);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureID);
 	}
 
-	inline void postRender(shader& s) override {
+	template<string_literal... Ns>
+	inline void postRender(shader<Ns...>& s) {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 };

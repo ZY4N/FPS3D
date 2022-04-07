@@ -25,17 +25,19 @@ template<vertex_comp... Cs>
 mesh<Cs...>::mesh(const mesh<Cs...>& other) :
 	vertices{ other.vertices },
 	indices{ other.indices },
-	attributes{ other.attributes } 
+	myColor{ other.myColor },
+	myTexture{ other.myTexture }
 {}
 
 template<vertex_comp... Cs>
 mesh<Cs...>::mesh(mesh<Cs...>&& other):
 	vertices{ std::move(other.vertices) },
 	indices{ std::move(other.indices) },
-	attributes{ std::move(other.attributes) },
 	vaoID{ other.vaoID },
 	vertexBufferID{ other.vertexBufferID },
-	indexBufferID{ other.indexBufferID }
+	indexBufferID{ other.indexBufferID },
+	myColor{ other.myColor },
+	myTexture{ other.myTexture }
 {	
 	other.vaoID = 0;
 	other.vertexBufferID = 0;
@@ -52,7 +54,9 @@ mesh<Cs...>& mesh<Cs...>::operator=(const mesh<Cs...>& other) {
 
 	vertices = other.vertices;
 	indices = other.indices;
-	attributes = other.attributes;
+	myColor = other.myColor;
+	myTexture = other.myTexture;
+
 	return *this;
 }
 
@@ -63,15 +67,20 @@ mesh<Cs...>& mesh<Cs...>::operator=(mesh<Cs...>&& other){
 
 	vertices = std::move(other.vertices);
 	indices = std::move(other.indices);
-	attributes = std::move(other.attributes);
-
+	
 	vaoID = other.vaoID;
 	vertexBufferID = other.vertexBufferID;
 	indexBufferID = other.indexBufferID;
 
+	myColor = other.myColor;
+	myTexture = other.myTexture;
+
 	other.vertexBufferID = 0;
 	other.indexBufferID = 0;
 	other.vaoID = 0;
+
+	other.myColor = nullptr;
+	other.myTexture = nullptr;
 
 	return *this;
 }
@@ -101,19 +110,9 @@ void mesh<Cs...>::initVAO() {
 }
 
 template<vertex_comp... Cs>
-void mesh<Cs...>::addAttribute(meshEffect* attr) {
-	attributes.push_back(attr);
-}
-
-template<vertex_comp... Cs>
-void mesh<Cs...>::removeAttribute(meshEffect* attr) {
-	attributes.erase(std::find(attributes.begin(), attributes.end(), attr));
-}
-
-template<vertex_comp... Cs>
 meshInstance mesh<Cs...>::getInstance(const glm::mat4x4 modelMatrix) const {
 	if (vaoID) {
-		return meshInstance(vaoID, indices.size(), modelMatrix, attributes);
+		return meshInstance(vaoID, indices.size(), modelMatrix, myColor, myTexture);
 	} else {
 		throw std::runtime_error("Cannot create mesh instance without initialized vao");
 	}

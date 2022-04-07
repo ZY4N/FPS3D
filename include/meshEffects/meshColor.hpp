@@ -2,22 +2,29 @@
 
 #include <primitives.hpp>
 #include <meshEffect.hpp>
+#include <string_literal.hpp>
 
 #include <glm/gtx/string_cast.hpp>
 
 
-struct meshColor : public meshEffect {
+
+struct meshColor {
 	glm::fvec4 c;
 
-	meshColor(const glm::fvec4& theColor) : c{ theColor }{
-		c += glm::fvec4{ 0.2, 0.2, 0.2, 0.2 }; // just for debugging
-	} 
+	static constexpr char mergeVar[] = "colorMerge";
+	static constexpr char colorVar[] = "meshColor";
 
-	inline void preRender(shader& s) override {
-		s.set("colorMerge", 1.0f);
-		s.set("meshColor", c);
+	meshColor(const glm::fvec4& theColor) : c{ theColor }{
+		//c += glm::fvec4{ 0.2, 0.2, 0.2, 0.2 }; // just for debugging
 	}
-	inline void postRender(shader& s) override {
-		s.set("colorMerge", 0.0f);
+
+	template<string_literal... Ns>
+	inline void preRender(shader<Ns...>& s) {
+		s.template set<mergeVar>(1.0f);
+		s.template set<colorVar>(c);
+	}
+
+	template<string_literal... Ns>
+	inline void postRender(shader<Ns...>& s) {
 	}
 };

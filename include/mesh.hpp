@@ -13,7 +13,7 @@
 
 #include <meshEffects.hpp>
 #include <meshInstance.hpp>
-#include <shader.hpp>
+#include <shaderImpl.hpp>
 
 template<vertex_comp... Cs>
 class mesh {
@@ -40,20 +40,19 @@ public:
 
 	void initVAO();
 
-	void addAttribute(meshEffect* attr);
-
-	void removeAttribute(meshEffect* attr);
-
 	meshInstance getInstance(const glm::mat4x4 modelMatrix = glm::identity<glm::mat4x4>()) const;
 
 protected:
 
 	std::vector<vertex> vertices;
 	std::vector<u16> indices;
-	std::vector<meshEffect*> attributes;
 	
 	GLuint vertexBufferID{ 0 };
 	GLuint indexBufferID{ 0 };
 	GLuint vaoID{ 0 };
+
+public:
+	meshColor* myColor{ nullptr };
+	meshTexture* myTexture{ nullptr };
 
 };

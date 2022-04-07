@@ -39,10 +39,8 @@ void MeshLoader::loadFromOBJ(
 
 			if (materialIndex != -1) {
 				const auto& mtl = materials[materialIndex];
-				if (mtl.colorAttribute && !mtl.textureAttribute)
-					newMesh.addAttribute(mtl.colorAttribute);
-				if (mtl.textureAttribute)
-					newMesh.addAttribute(mtl.textureAttribute);
+				newMesh.myColor = mtl.colorAttribute;
+				newMesh.myTexture = mtl.textureAttribute;
 			}	
 		}
 
@@ -176,7 +174,6 @@ void MeshLoader::parseMTL(const std::string& filename, const std::string& direct
 				std::strtof(++next, &next),
 				1
 			};
-
 			if (mtl->colorAttribute) {
 				mtl->colorAttribute->c = c;
 			} else {

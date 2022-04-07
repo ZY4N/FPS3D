@@ -15,38 +15,31 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <string_literal.hpp>
 #include <templateUtils.hpp>
 
-struct shaderSource {
-	GLenum type;
-	const char* src;
-	long len;
-};
-template<typename T>
-concept shaderSourceType = std::same_as<T, shaderSource>;
-
+template<string_literal... Ns>
 class shader {
 private:
 	GLuint id;
+	GLint valueIDs[sizeof...(Ns)];
 
 	static std::pair<char*, GLint> loadSource(const std::string& filename) ;
 	static GLuint compileShader(GLenum type, const GLchar* src, GLint* length = NULL);
 
 public:
-	shader(GLuint programID) : id{ programID } {}
-
-	static shader shaderFromOBJ(
-		const char* vertexStart, const char* vertexEnd,
-		const char* fragmentStart, const char* fragmentEnd
-	);
+	shader(GLuint programID);
 	
 	static shader loadShader(
 		const std::string& vertexFile,
 		const std::string& fragmentFile
 	);
 
-	template<shaderSourceType... Ts>
-	static shader createShader(Ts... shaderSources);
+	static shader createShader(
+		const char* vertexSrc, long vertexSrcLength,
+		const char* geometrySrc, long geometrySrcLength,
+		const char* fragmentSrc, long fragmentSrcLength
+	);
 
 	~shader();
 
@@ -56,10 +49,22 @@ public:
 
 	void unbind();
 
-	template<typename T>
-	void set(const GLchar* name, const T& value) {
+	//template<string_literal N, typename T>
+	//void set(const T& value);
+
+	template<string_literal N, typename T>
+	void set(const T& value) {
+		constexpr size_t valueIndex = string_index<N, Ns...>();
+		GLint valueID;
+		if constexpr (valueIndex == -1) {
+			//this branch should never be taken
+			puts("hi");
+			valueID = glGetUniformLocation(id, N.value);		
+		} else {
+			valueID = valueIDs[valueIndex];
+		}
+		
 		bind();
-		const GLint valueID = glGetUniformLocation(id, name);
 		if constexpr (std::same_as<T, glm::mat4x4>)
 			glUniformMatrix4fv(valueID, 1, false, glm::value_ptr(value));
 		else if constexpr (std::same_as<T, glm::mat3x3>)
@@ -70,14 +75,13 @@ public:
 			glUniform3fv(valueID, 1, glm::value_ptr(value));
 		else if constexpr (std::same_as<T, glm::fvec2>)
 			glUniform2fv(valueID, 1, glm::value_ptr(value));
-		else if constexpr (std::same_as<T, GLfloat>)
+		else if constexpr (std::same_as<T, float>)
 			glUniform1f(valueID, value);
-		else if constexpr (std::same_as<T, GLint>)
+		else if constexpr (std::same_as<T, int>)
 			glUniform1i(valueID, value);
 		else T::_unimplemented_function;
 		unbind();
 	}
-
 };
 
 
