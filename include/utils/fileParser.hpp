@@ -1,14 +1,14 @@
 #pragma once
 
 #include <string>
-#include <intX.hpp>
 #include <cstring>
+#include <iostream>
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <templateUtils.hpp>
+#include <utils/intX.hpp>
+#include <utils/templateUtils.hpp>
 
-#include <iostream>
 
 template<typename F>
 struct parser {

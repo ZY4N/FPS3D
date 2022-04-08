@@ -1,5 +1,5 @@
 #pragma once
-#include <mesh.hpp>
+#include <geometry/mesh.hpp>
 
 template<vertex_comp... Cs>
 mesh<Cs...>::mesh(

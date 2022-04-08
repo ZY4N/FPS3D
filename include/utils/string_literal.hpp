@@ -1,6 +1,6 @@
 #pragma once
 
-#include <intX.hpp>
+#include <utils/intX.hpp>
 
 template<size_t N>
 struct string_literal {

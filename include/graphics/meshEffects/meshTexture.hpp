@@ -2,11 +2,11 @@
 
 #include <GL/glew.h> 
 #include <SFML/OpenGL.hpp>
-#include <texture.hpp>
+#include <utils/texture.hpp>
+#include <utils/primitives.hpp>
+#include <utils/string_literal.hpp>
 
-#include <meshEffect.hpp>
-#include <primitives.hpp>
-#include <string_literal.hpp>
+#include <graphics/meshEffect.hpp>
 
 struct meshTexture {
 	GLuint textureID;

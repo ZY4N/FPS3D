@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include <MeshLoader.hpp>
+#include <geometry/MeshLoader.hpp>
 
 #include <filesystem>
 #include <vector>
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
-#include <fileParser.hpp>
+#include <utils/fileParser.hpp>
 
 constexpr auto BUFFER_SIZE = 16 * 1024;
 
@@ -19,9 +19,9 @@ void MeshLoader::loadFromOBJ(
 ) {
 
 	//temporary storage for parsing
-	std::vector<vertex3D> vertices{ { 0.f, 0.f, 0.f } };
-	std::vector<vertex3D> normals{ { 0.f, 0.f, 0.f } };
-	std::vector<vertex2D> texCoords{ { 0.f, 0.f } };
+	std::vector<typename vertex_comps::position::type> vertices{ { 0.f, 0.f, 0.f } };
+	std::vector<typename vertex_comps::normal::type> normals{ { 0.f, 0.f, 0.f } };
+	std::vector<typename vertex_comps::texCoord::type> texCoords{ { 0.f, 0.f } };
 	
 	//the final buffers for the gpu
 	std::vector<typename mesh<Cs...>::vertex> vertexBuffer;

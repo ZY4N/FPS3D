@@ -3,16 +3,16 @@
 #include <GL/glew.h> 
 #include <SFML/OpenGL.hpp>
 
-#include <intX.hpp>
-#include <meshEffect.hpp>
-#include <shaderImpl.hpp>
-
 #include <vector>
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
+
+#include <utils/intX.hpp>
+#include <graphics/meshEffects.hpp>
+#include <graphics/shaderImpl.hpp>
 
 struct meshInstance {
 	GLuint vba;

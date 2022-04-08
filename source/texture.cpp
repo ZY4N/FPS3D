@@ -1,4 +1,4 @@
-#include <texture.hpp>
+#include <utils/texture.hpp>
 
 #include <stb/image_no_warnings.hpp>
 #include <algorithm>

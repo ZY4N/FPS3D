@@ -15,8 +15,8 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <string_literal.hpp>
-#include <templateUtils.hpp>
+#include <utils/string_literal.hpp>
+#include <utils/templateUtils.hpp>
 
 template<string_literal... Ns>
 class shader {
@@ -49,16 +49,12 @@ public:
 
 	void unbind();
 
-	//template<string_literal N, typename T>
-	//void set(const T& value);
-
 	template<string_literal N, typename T>
 	void set(const T& value) {
 		constexpr size_t valueIndex = string_index<N, Ns...>();
 		GLint valueID;
 		if constexpr (valueIndex == -1) {
 			//this branch should never be taken
-			puts("hi");
 			valueID = glGetUniformLocation(id, N.value);		
 		} else {
 			valueID = valueIDs[valueIndex];

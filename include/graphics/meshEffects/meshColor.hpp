@@ -1,12 +1,10 @@
 #pragma once
 
-#include <primitives.hpp>
-#include <meshEffect.hpp>
-#include <string_literal.hpp>
+#include <utils/primitives.hpp>
+#include <utils/string_literal.hpp>
+#include <graphics/meshEffect.hpp>
 
 #include <glm/gtx/string_cast.hpp>
-
-
 
 struct meshColor {
 	glm::fvec4 c;

@@ -10,11 +10,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 
-#include <MeshLoaderImpl.hpp>
-#include <mesh.hpp>
-#include <meshEffects.hpp>
-#include <shaderImpl.hpp>
-#include <camera.hpp>
+#include <geometry/MeshLoaderImpl.hpp>
+#include <geometry/mesh.hpp>
+#include <graphics/meshEffects.hpp>
+#include <graphics/shaderImpl.hpp>
+#include <graphics/camera.hpp>
 
 // 🍝
 extern "C" char _binary_vertex_glsl_start;
@@ -29,7 +29,7 @@ using defaultShader = shader<"projectionMat", "viewMat", "modelMat", "colorMerge
 
 
 int main() {
-
+ 
 	//----------------------[ window + opengl setup ]----------------------//
 
 	int width = 1280;
@@ -44,7 +44,7 @@ int main() {
 		return -1;
 	}
 
-	//glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback([](
 			GLenum source,
 			GLenum type,

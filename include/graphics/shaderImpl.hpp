@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shader.hpp>
+#include <graphics/shader.hpp>
 
 template<string_literal... Ns>
 shader<Ns...>::shader(GLuint programID) : id{ programID } {

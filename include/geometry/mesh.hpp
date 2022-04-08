@@ -6,14 +6,14 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <intX.hpp>
-#include <primitives.hpp>
-#include <packedTuple.hpp>
-#include <vertex_comp.hpp>
+#include <utils/intX.hpp>
+#include <utils/primitives.hpp>
+#include <utils/packedTuple.hpp>
+#include <geometry/vertex_comp.hpp>
+#include <geometry/meshInstance.hpp>
 
-#include <meshEffects.hpp>
-#include <meshInstance.hpp>
-#include <shaderImpl.hpp>
+#include <graphics/meshEffects.hpp>
+#include <graphics/shaderImpl.hpp>
 
 template<vertex_comp... Cs>
 class mesh {

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string>
-#include <intX.hpp>
-#include <texture.hpp>
-#include <meshImpl.hpp>
-#include <meshEffects.hpp>
+#include <utils/intX.hpp>
+#include <utils/texture.hpp>
+#include <geometry/meshImpl.hpp>
+#include <graphics/meshEffects.hpp>
 #include <cstring>
 
 struct material {

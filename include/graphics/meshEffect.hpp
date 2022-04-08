@@ -2,10 +2,11 @@
 
 #include <GL/glew.h> 
 #include <SFML/OpenGL.hpp>
-#include <primitives.hpp>
+#include <utils/primitives.hpp>
+#include <utils/intX.hpp>
+#include <graphics/shader.hpp>
+
 #include <concepts>
-#include <intX.hpp>
-#include <shader.hpp>
 
 //Ns represent the names of unfiorms in the shader the effect makes use of
 template<const char*... Ns>
