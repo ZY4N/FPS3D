@@ -30,14 +30,14 @@ void MeshLoader::loadFromOBJ(
 	//vertex combinations for indexing
 	std::vector<indexedVertexID<Cs...>> vertexIDs;
 
-	size_t materialIndex = -1;
+	size_t materialIndex = SIZE_MAX;
 
 	const auto createMesh = [&]() {
 		if (vertexBuffer.size() > 0) {
 			//auto& newMesh = destination.emplace_back(std::move(vertexBuffer), std::move(indexBuffer));
 			auto& newMesh = meshes.emplace_back(vertexBuffer, indexBuffer);
 
-			if (materialIndex != -1) {
+			if (materialIndex != SIZE_MAX) {
 				const auto& mtl = materials[materialIndex];
 				newMesh.myColor = mtl.colorAttribute;
 				newMesh.myTexture = mtl.textureAttribute;
@@ -85,10 +85,9 @@ void MeshLoader::loadFromOBJ(
 			// for that component the fallback component at index 0 is used
 			std::memset(indices, 0, sizeof(indices));
 
-			size_t charIndex = 0;
 			const char* reader = begin;
 			for (int vertexindex = 0; reader <= end + 1; ) {
-				if (reader == end + 1 || *reader == ' ') {			
+				if (reader == end + 1 || *reader == ' ') {
 
 					u32 index;
 
@@ -112,10 +111,10 @@ void MeshLoader::loadFromOBJ(
 
 						push(vertices[indices[0]]);
 					
-						if constexpr (any_of<vertex_comps::texCoord, Cs...>)
+						if constexpr (any_of<vertex_comps::texCoord, Cs...>())
 							push(texCoords[indices[1]]);
 
-						if constexpr (any_of<vertex_comps::normal, Cs...>)
+						if constexpr (any_of<vertex_comps::normal, Cs...>())
 							push(normals[indices[2]]);
 
 					}
@@ -153,7 +152,11 @@ void MeshLoader::loadFromOBJ(
 			materialIndex = it == materials.end() ? -1 : (it - materials.begin());
 		}},
 		parser{ "mtllib ", [&](const char* begin, const char* end){
-			parseMTL(directory + std::string(begin, end + 1), directory, materials);
+			std::string mtlFile = std::string(begin, end + 1);
+			if (mtlFile[0] != std::filesystem::path::preferred_separator) {
+				mtlFile = directory + mtlFile;
+			}
+			parseMTL(mtlFile, directory, materials);
 		}}
 	);
 	createMesh();
@@ -164,16 +167,21 @@ void MeshLoader::parseMTL(const std::string& filename, const std::string& direct
 	
 	parseFile<BUFFER_SIZE>(filename,
 		parser{ "map_Kd ", [&](const char* begin, const char* end){
-			mtl->textureAttribute = new meshTexture(texture::load(directory + std::string(begin, end + 1), 4));	
+			std::string texFile = std::string(begin, end + 1);
+			if (texFile[0] != std::filesystem::path::preferred_separator) {
+				texFile = directory + texFile;
+			}
+			mtl->textureAttribute = new meshTexture(texture::load(texFile, 4));	
 		}},
 		parser{ "Kd ", [&](const char* begin, const char* end){
 			char* next;
-			glm::fvec4 c {
-				std::strtof(begin, &next),
-				std::strtof(++next, &next),
-				std::strtof(++next, &next),
-				1
-			};
+			glm::fvec4 c;
+
+			c.r = std::strtof(begin, &next);
+			c.g = std::strtof(++next, &next);
+			c.b = std::strtof(++next, &next);
+			c.a = 1;
+
 			if (mtl->colorAttribute) {
 				mtl->colorAttribute->c = c;
 			} else {

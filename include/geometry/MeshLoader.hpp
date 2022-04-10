@@ -41,17 +41,19 @@ struct material {
 
 template<vertex_comp... Cs>
 struct vertexID {
-	u32 indices[sizeof...(Cs)];
+	u32 indices[sizeof...(Cs)]{
+		(0 * sizeof(typename Cs::type))...  // init to zero
+	};
 	friend auto operator<=>(const vertexID&, const vertexID&) = default;
 };
 
 template<vertex_comp... Cs>
 struct indexedVertexID {
 	vertexID<vertex_comps::position, Cs...> id;
-	u32 bufferIndex{ (u32)-1 };
+	u32 bufferIndex{ U32_MAX };
 
 	indexedVertexID(u32* indices) {
-		std::memcpy(id.indices, indices, (1 + ... + sizeof(Cs)));
+		std::copy(indices, indices + (1 + ... + sizeof(Cs)), id.indices);
 	}
 
 	friend auto operator<=>(const indexedVertexID& a, const indexedVertexID& b) {

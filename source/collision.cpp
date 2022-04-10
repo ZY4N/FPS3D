@@ -71,7 +71,7 @@ float Collision::signedDistTri(vf3 dir, const triangle& s, const triangle& t) {
 
         //----------/ check if moving apart /----------//
 
-        if(u >= 0 && v >= 0 && u + v <= 1) {
+        if (u >= 0 && v >= 0 && u + v <= 1) {
             const float dist = yCompT.dot(qvec) * invDet;
             if (dist > -EPSILON) {
                 minSignedDist = fmin(dist * dist, minSignedDist);

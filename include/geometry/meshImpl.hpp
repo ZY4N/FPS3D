@@ -6,6 +6,34 @@ mesh<Cs...>::mesh(
 	const std::vector<typename mesh<Cs...>::vertex>& vertexBuffer,
 	const std::vector<u16>& indexBuffer
 ) : vertices{ vertexBuffer }, indices{ indexBuffer } {
+	/*
+	std::cout << "vertices:\n";
+	for (size_t i = 0; i < vertexBuffer.size(); i++) {
+		float* numbers = (float*)&vertexBuffer[i];
+		std::cout << "{ { ";
+		for (size_t j = 0; j < 3; j++) {
+			std::cout << numbers[j] << ", ";
+		}
+		std::cout << "}, { ";
+
+		for (size_t j = 0; j < 2; j++) {
+			std::cout << numbers[3 + j] << ", ";
+		}
+
+		std::cout << "}, { ";
+
+		for (size_t j = 0; j < 3; j++) {
+			std::cout << numbers[5 + j] << ", ";
+		}
+		std::cout << "} },\n";
+	}
+
+	std::cout << "indices:\n";
+	for (u16 index : indices) {
+		std::cout << index << ' ';
+	}
+	std::cout << std::endl;
+*/
 }
 
 template<vertex_comp... Cs>
@@ -17,8 +45,10 @@ mesh<Cs...>::mesh(
 
 template<vertex_comp... Cs>
 mesh<Cs...>::~mesh() {
-	glDeleteBuffers(1, &vertexBufferID);
-	glDeleteBuffers(1, &indexBufferID);
+	if (vertexBufferID)
+		glDeleteBuffers(1, &vertexBufferID);
+	if (indexBufferID)
+		glDeleteBuffers(1, &indexBufferID);
 }
 
 template<vertex_comp... Cs>
@@ -110,10 +140,31 @@ void mesh<Cs...>::initVAO() {
 }
 
 template<vertex_comp... Cs>
-meshInstance mesh<Cs...>::getInstance(const glm::mat4x4 modelMatrix) const {
+renderable mesh<Cs...>::getRenderable(const glm::mat4x4 modelMatrix) const {
 	if (vaoID) {
-		return meshInstance(vaoID, indices.size(), modelMatrix, myColor, myTexture);
+		return renderable(vaoID, indices.size(), modelMatrix, myColor, myTexture);
 	} else {
 		throw std::runtime_error("Cannot create mesh instance without initialized vao");
 	}
+}
+
+template<vertex_comp... Cs>
+renderable mesh<Cs...>::getCollidable(const glm::mat4x4 modelMatrix) const {
+	return renderable(vaoID, indices.size(), modelMatrix, myColor, myTexture);
+}
+
+template<vertex_comp... Cs>
+aabb mesh<Cs...>::getBoundingBox() const {
+	return aabb::createBoundingBox(&vertices[0], vertices.size());
+}
+
+
+template<vertex_comp... Cs>
+const std::vector<typename mesh<Cs...>::vertex>& mesh<Cs...>::getVertexBuffer() const {
+	return vertices;
+}
+
+template<vertex_comp... Cs>
+const std::vector<u16>& mesh<Cs...>::getIndexBuffer() const {
+	return indices;
 }

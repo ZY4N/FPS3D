@@ -3,8 +3,6 @@
 #include <GL/glew.h> 
 #include <SFML/OpenGL.hpp>
 
-#include <vector>
-
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -14,7 +12,7 @@
 #include <graphics/meshEffects.hpp>
 #include <graphics/shaderImpl.hpp>
 
-struct meshInstance {
+struct renderable {
 	GLuint vba;
 	size_t numIndices;
 	glm::mat4x4 transform;
@@ -22,7 +20,7 @@ struct meshInstance {
 	meshColor* myColor;
 	meshTexture* myTexture;
 	
-	meshInstance(
+	renderable(
 		GLuint vba,
 		size_t numIndices,
 		const glm::mat4x4& transform,

@@ -10,10 +10,13 @@
 #include <utils/primitives.hpp>
 #include <utils/packedTuple.hpp>
 #include <geometry/vertex_comp.hpp>
-#include <geometry/meshInstance.hpp>
 
 #include <graphics/meshEffects.hpp>
 #include <graphics/shaderImpl.hpp>
+
+#include <graphics/renderable.hpp>
+#include <physics/collidable.hpp>
+#include <physics/aabb.hpp>
 
 template<vertex_comp... Cs>
 class mesh {
@@ -40,7 +43,15 @@ public:
 
 	void initVAO();
 
-	meshInstance getInstance(const glm::mat4x4 modelMatrix = glm::identity<glm::mat4x4>()) const;
+	const std::vector<vertex>& getVertexBuffer() const;
+
+	const std::vector<u16>& getIndexBuffer() const;
+
+	renderable getRenderable(const glm::mat4x4 modelMatrix = glm::identity<glm::mat4x4>()) const;
+
+	renderable getCollidable(const glm::mat4x4 modelMatrix = glm::identity<glm::mat4x4>()) const;
+
+	aabb getBoundingBox() const;
 
 protected:
 
@@ -50,6 +61,8 @@ protected:
 	GLuint vertexBufferID{ 0 };
 	GLuint indexBufferID{ 0 };
 	GLuint vaoID{ 0 };
+
+	aabb boundingBox;
 
 public:
 	meshColor* myColor{ nullptr };

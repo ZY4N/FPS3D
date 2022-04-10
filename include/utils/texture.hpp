@@ -9,16 +9,17 @@ struct Position {
 
 struct texture {
 	
-	size_t dataSize;
-	uint8_t* data;
-	uint32_t width,height;
-	uint8_t numChannels;
+	uint8_t* data{ nullptr };
+	size_t dataSize{ 0 };
+	uint32_t width{ 0 };
+	uint32_t height{ 0 };
+	uint8_t numChannels { 0 };
 
-	texture() : width{ 0 }, height{ 0 }, numChannels{ 0 }, dataSize{ 0 }, data{ nullptr } {}
+	texture() = default;
 
-	texture(uint32_t _width, uint32_t _height, uint8_t _numChannels, uint8_t* _data) :
-		width(_width), height(_height), numChannels(_numChannels), 
-		dataSize((uint64_t)_width * (uint64_t)_height* (uint64_t)_numChannels), data(_data) {};
+	texture(uint8_t* data, uint32_t width, uint32_t height, uint8_t numChannels) :
+		data{ data }, dataSize{ (size_t)width * (size_t)height * (uint64_t)numChannels },
+		width{ width }, height{ height }, numChannels{ numChannels } {};
 
 	texture(const texture&);
 

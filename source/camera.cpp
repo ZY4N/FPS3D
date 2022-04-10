@@ -8,7 +8,6 @@
 camera::camera(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& worldUp) :
 	position{ position }, viewDirection{ direction },  worldUp{ worldUp }
 {
-
 	matrix = glm::mat4(1.f);
 	velocity = glm::vec3(0.f, 0.f, 0.f);
 

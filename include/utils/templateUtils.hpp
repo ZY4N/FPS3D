@@ -37,6 +37,7 @@ constexpr bool containsAtIndex(auto index) {
 	return matches[index];
 }
 
+
 /*
 constexpr bool constexpr_strcmp(const char* str1, const char* str2) {
 	while (str1 && str2) {
@@ -58,7 +59,7 @@ constexpr size_t string_index() {
 			return i;
 		}
 	}	
-	return -1;
+	return SIZE_MAX;
 }
 
 

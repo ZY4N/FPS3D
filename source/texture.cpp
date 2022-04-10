@@ -79,7 +79,7 @@ texture texture::load(const std::string& filename, uint8_t forceChannels) {
 	if (forceChannels != 0)
 		channels = forceChannels;
 
-	return texture(static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint8_t>(channels), data);
+	return texture(data, static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint8_t>(channels));
 }
 
 texture texture::create(const uint32_t width, const uint32_t height, const uint8_t numChannels, const uint8_t* fill) {
@@ -89,7 +89,7 @@ texture texture::create(const uint32_t width, const uint32_t height, const uint8
 	for (uint32_t i = 0; i < len; i++)
 		data[i] = fill[i % numChannels];
 	
-	return texture(width, height, numChannels, data);
+	return texture(data, width, height, numChannels);
 }
 
 texture texture::createAtlas(texture* textures, size_t numTextures, Position** positions) {
@@ -100,9 +100,9 @@ texture texture::createAtlas(texture* textures, size_t numTextures, Position** p
 
 	stbrp_rect* rects = new stbrp_rect[numTextures];
 
-	for (int i = 0; i < numTextures; i++) {
+	for (size_t i = 0; i < numTextures; i++) {
 		rects[i] = {
-			i,
+			(int)i,
 			(stbrp_coord)textures[i].width,
 			(stbrp_coord)textures[i].height,
 			(stbrp_coord)0,

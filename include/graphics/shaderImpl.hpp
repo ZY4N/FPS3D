@@ -15,8 +15,10 @@ std::pair<char*, GLint> shader<Ns...>::loadSource(const std::string& filename) {
 	file.seekg(0, std::ios::end);
 	size_t size = file.tellg();
 	
-	if (size == 0 || size == -1) {
-		//throw std::runtime_error(std::string("Cannot open shader source file '") + filename + '\'');
+	if (size == 0 || size == SIZE_MAX) {
+		file.close();
+		std::cout << "Cannot open shader source file '" << filename << "'.\n";
+		return { nullptr, 0 };
 	}
 
 	char* src = new char[size + 1];
@@ -53,18 +55,21 @@ GLuint shader<Ns...>::compileShader(GLenum type, const GLchar* src, GLint* lengt
 template<string_literal... Ns>
 shader<Ns...> shader<Ns...>::loadShader(
 	const std::string& vertexFile,
+	const std::string& geometryFile,
 	const std::string& fragmentFile
 ) {
 	auto [ vertexSrc, vertexLen ] = loadSource(vertexFile);
+	auto [ geometrySrc, geometryLen ] = loadSource(geometryFile);
 	auto [ fragmentSrc, fragmentLen ] = loadSource(fragmentFile);
 
 	return createShader(
 		vertexSrc, vertexLen,
-		"", 0,
+		geometrySrc, geometryLen,
 		fragmentSrc, fragmentLen
 	);
 
 	delete[] vertexSrc;
+	delete[] geometrySrc;
 	delete[] fragmentSrc;
 }
 
@@ -75,7 +80,6 @@ shader<Ns...> shader<Ns...>::createShader(
 	const char* geometrySrc	, long geometrySrcLength,
 	const char* fragmentSrc	, long fragmentSrcLength
 ){
-	
 	struct shaderInfo {
 		GLenum type{ 0 };
 		const char* src{ nullptr };
@@ -87,7 +91,7 @@ shader<Ns...> shader<Ns...>::createShader(
 		shaderInfo{ .type = GL_VERTEX_SHADER	, .src = vertexSrc	, .len = vertexSrcLength	},
 		shaderInfo{ .type = GL_GEOMETRY_SHADER	, .src = geometrySrc, .len = geometrySrcLength	},
 		shaderInfo{ .type = GL_FRAGMENT_SHADER	, .src = fragmentSrc, .len = fragmentSrcLength	}
-	}; 
+	};
 
 	GLuint programID = glCreateProgram(); 
 
@@ -95,6 +99,15 @@ shader<Ns...> shader<Ns...>::createShader(
 		if (shader.len) {
 			shader.id = compileShader(shader.type, shader.src, (GLint*)&shader.len);
 			glAttachShader(programID, shader.id);
+		} else {
+			std::string shaderName;
+			switch (shader.type) {
+				case GL_VERTEX_SHADER:		shaderName = "vertex";		break;
+				case GL_GEOMETRY_SHADER:	shaderName = "geometry";	break;
+				case GL_FRAGMENT_SHADER:	shaderName = "fragment";	break;
+				default: shaderName = "unknown";
+			}
+			std::cout << "Using default " << shaderName << " shader." << std::endl;
 		}
 	}
 

@@ -32,6 +32,7 @@ public:
 	
 	static shader loadShader(
 		const std::string& vertexFile,
+		const std::string& geometryFile,
 		const std::string& fragmentFile
 	);
 
@@ -53,8 +54,8 @@ public:
 	void set(const T& value) {
 		constexpr size_t valueIndex = string_index<N, Ns...>();
 		GLint valueID;
-		if constexpr (valueIndex == -1) {
-			//this branch should never be taken
+		if constexpr (valueIndex == SIZE_MAX) {
+			constexpr const char* _using_uncached_uniform = N.value;
 			valueID = glGetUniformLocation(id, N.value);		
 		} else {
 			valueID = valueIDs[valueIndex];

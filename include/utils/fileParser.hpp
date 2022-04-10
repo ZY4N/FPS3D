@@ -32,14 +32,14 @@ void parseFile(const std::string& filename, parser<Fs>... parsers) {
 
 	size_t newBytes;
 	while ((newBytes = read(fd, buffer + leftOverBytes, BUFFER_SIZE - leftOverBytes)) || leftOverBytes) {
-		if (newBytes == -1)
+		if (newBytes == SIZE_MAX)
 			throw "failed to read file";
 
 		bool flush = !newBytes;
 		newBytes += leftOverBytes;
 		
 		char *lineEnd, *line = buffer;
-		while (lineEnd = flush ? (buffer + leftOverBytes) : (char*)std::memchr(line, '\n', buffer + newBytes - line)) {
+		while ((lineEnd = (flush ? (buffer + leftOverBytes) : (char*)std::memchr(line, '\n', buffer + newBytes - line)))) {
 			bool foundMatch = false;
 			do {
 				constexpr_indexed_for<0>([&](const auto index, auto const& parser) {
