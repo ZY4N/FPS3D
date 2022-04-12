@@ -51,37 +51,6 @@ u32 countEdges(const std::vector<u16>& indices) {
 
 namespace meshes {
 
-// will be removed
-u32 predictEdgeVertexCount(u32 depth) {
-	u32 numVertices = 2;
-	u32 powerOfTwo = 1;
-	for (u32 i = 0; i < depth; i++) {
-		numVertices += powerOfTwo;
-		powerOfTwo *= 2;
-	}
-	return numVertices;
-}
-
-u32 predictEdgeCount(u32 depth) {
-	u32 edgeCount = 2;
-	u32 powerOfTwo = 1;
-    for (u32 i = 1; i < depth; i++) {
-        edgeCount = edgeCount * 4 - powerOfTwo;
-        powerOfTwo *= 2;
-	}
-	return 20 * edgeCount + powerOfTwo;
-}
-
-u32 predictVertexCount(u32 depth) {
-	u32 vertexCount = 22;
-	u32 powerOfFour = 1;
-    for (u32 i = 1; i < depth; i++) {
-        vertexCount = 2 * vertexCount + (20 * powerOfFour - 1);
-        powerOfFour *= 4;
-	}
-	return vertexCount;
-}
-
 // this will be cleaned up soon
 static shapeMesh createSphere(const shapeMesh& oldSphere, u32 extraDepth) {
 
