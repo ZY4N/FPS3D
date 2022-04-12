@@ -28,53 +28,96 @@ struct indexedEdgeID {
 };
 
 
+u32 countEdges(const std::vector<u16>& indices) {
+
+	std::vector<indexedEdgeID> edgeVerticesToEdgeIndex;
+
+	const auto addUnique = [&](u16 v1, u16 v2) {
+		bool switched = v1 < v2;
+		indexedEdgeID eID(switched ? v2 : v1, switched ? v1 : v2);
+		const auto it = std::upper_bound(edgeVerticesToEdgeIndex.begin(), edgeVerticesToEdgeIndex.end(), eID);
+		if (it == edgeVerticesToEdgeIndex.begin() || *(it - 1) != eID) {
+			edgeVerticesToEdgeIndex.insert(it, eID);
+		}
+	};
+
+	for (size_t i = 0; i < indices.size(); i += 3) {
+		addUnique(indices[i+0], indices[i+1]);
+		addUnique(indices[i+1], indices[i+2]);
+		addUnique(indices[i+2], indices[i+0]);
+	}
+	return edgeVerticesToEdgeIndex.size();
+}
+
 namespace meshes {
 
 // will be removed
-template<u32 I>
-constexpr u32 numEdgeVertices() {
+u32 predictEdgeVertexCount(u32 depth) {
 	u32 numVertices = 2;
 	u32 powerOfTwo = 1;
-	for (u32 i = 0; i < I; i++) {
+	for (u32 i = 0; i < depth; i++) {
 		numVertices += powerOfTwo;
 		powerOfTwo *= 2;
 	}
 	return numVertices;
 }
 
+u32 predictEdgeCount(u32 depth) {
+	u32 edgeCount = 2;
+	u32 powerOfTwo = 1;
+    for (u32 i = 1; i < depth; i++) {
+        edgeCount = edgeCount * 4 - powerOfTwo;
+        powerOfTwo *= 2;
+	}
+	return 20 * edgeCount + powerOfTwo;
+}
+
+u32 predictVertexCount(u32 depth) {
+	u32 vertexCount = 22;
+	u32 powerOfFour = 1;
+    for (u32 i = 1; i < depth; i++) {
+        vertexCount = 2 * vertexCount + (20 * powerOfFour - 1);
+        powerOfFour *= 4;
+	}
+	return vertexCount;
+}
+
 // this will be cleaned up soon
-template<u32 I>
-static shapeMesh createSphere(const shapeMesh& oldSphere) {
+static shapeMesh createSphere(const shapeMesh& oldSphere, u32 extraDepth) {
 
 	const auto& oldVertices = oldSphere.getVertexBuffer();
 	const auto& oldIndices = oldSphere.getIndexBuffer();
 
 	// has to be cleaned up
-	const size_t currentT = 1;//(oldVertices.size() - 2) / 10;
-	const size_t currentNumEdges = 41;
-	constexpr u32 verticesPerEdge = numEdgeVertices<I>();
-	constexpr size_t numNewEdgeVertices = verticesPerEdge - 2;
+	const u32 lasT = oldIndices.size() / 60;
+	const u32 lastDepth = sqrt(lasT);
+	const u32 thisDepth = lastDepth * (extraDepth + 1);
+	const u32 thisT = thisDepth * thisDepth;
+	const u32 lastNumEdges = 30 * lasT + 11 * lastDepth;			// follows 10 * n^2 + 11 * n + 1
+	const u32 currentNumVertices = 10 * thisT + 11 * thisDepth + 1;	// follows 30 * n^2 + 11 * n
+	const u32 currentNumIndices = 60 * thisT;						// follows 60 * n^2
+	const u32 verticesPerEdge = 2 + extraDepth;
+	const u32 numNewEdgeVertices = extraDepth;
 
 	// store the new vertices for each edge for fast lookup
-	u16* edgeVertexIndices = new u16[numNewEdgeVertices * currentNumEdges];
+	u16* edgeVertexIndices = new u16[numNewEdgeVertices * lastNumEdges];
 
 	// indexBuffer allocated in one go
-	constexpr u32 triangleMultiplier = std::pow(4, I);
 	std::vector<u16> indexBuffer;
-	indexBuffer.reserve(oldIndices.size() * triangleMultiplier);
+	indexBuffer.reserve(currentNumIndices);
 
 	// vertexBuffer allocated in one go
-	const size_t lastA = sqrt(currentT);
-	const size_t nextT = (lastA + 1) * (lastA + 1);
 	std::vector<shapeMesh::vertex> vertexBuffer;
-	vertexBuffer.reserve(10 * nextT + 2);
+	vertexBuffer.reserve(currentNumVertices);
 	vertexBuffer.insert(vertexBuffer.begin(), oldVertices.begin(), oldVertices.end());
 	
-	// this will be the insertion top
+	// this will be the insertion index
 	size_t edgeIndex = 0;
 	// lookup to convert vertex pair to index (order should not matter) 
 	std::vector<indexedEdgeID> edgeVerticesToEdgeIndex;
-	edgeVerticesToEdgeIndex.reserve(currentNumEdges);
+	edgeVerticesToEdgeIndex.reserve(lastNumEdges);
+
+	u16* topIndices = new u16[numNewEdgeVertices + 1];
 
 	const auto findOrReserveEdgeIndex = [&](u16 v1, u16 v2, u16& index, bool& switched) {
 		// swapping to unify different vertex orders
@@ -123,11 +166,10 @@ static shapeMesh createSphere(const shapeMesh& oldSphere) {
 		u16* rightEdgeBuffer = &edgeVertexIndices[rightEdgeIndex * numNewEdgeVertices];
 		u16* bottomEdgeBuffer = &edgeVertexIndices[bottomEdgeIndex * numNewEdgeVertices];
 
-		u16 topIndices[numNewEdgeVertices + 1];
 		topIndices[0] = index1; // store tip of old triangle
 		size_t topPosition; // index in topIndices array
 
-		constexpr float verticalStepScale = 1.0 / (verticesPerEdge - 1);
+		const float verticalStepScale = 1.0 / (verticesPerEdge - 1);
 		for (u32 i = 0; i <= numNewEdgeVertices; i++) {
 			float a = (i+1) * verticalStepScale;
 			const auto posA = glm::normalize(glm::mix(topPos, leftPos, a)) * 0.5f;
@@ -199,7 +241,9 @@ static shapeMesh createSphere(const shapeMesh& oldSphere) {
 	}
 
 	delete[] edgeVertexIndices;
-	
+	delete[] topIndices;
+
 	return shapeMesh(std::move(vertexBuffer), std::move(indexBuffer));
 }
+
 }

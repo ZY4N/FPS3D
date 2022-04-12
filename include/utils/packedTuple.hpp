@@ -48,7 +48,6 @@ struct packedTuple {
 		return get_helper<I, 0, Ts...>(data);
 	}
 
-
 	template<size_t I, size_t J, typename T, typename... Tss>
 	static inline const auto& get_helper(const uint8_t* data) {
 		if constexpr (I == J) {

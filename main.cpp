@@ -114,6 +114,7 @@ int main(int numArgs, char* args[]) {
 		"", 0,
 		&_binary_fragment_glsl_start, (&_binary_fragment_glsl_end - &_binary_fragment_glsl_start) - 1
 	);
+	
 	/*
 	defaultShader shader = defaultShader::loadShader(
 		"/home/zy4n/Documents/Code/C++/FPS3D/shaders/vertex.glsl",
@@ -152,7 +153,7 @@ int main(int numArgs, char* args[]) {
 		std::cout << (end - start).count() << "ns" << std::endl;
 	};
 
-	time([&]() { MeshLoader::loadFromOBJ(std::string(meshFiles[meshIndex]), meshes, materials); });
+	//time([&]() { MeshLoader::loadFromOBJ(std::string(meshFiles[meshIndex]), meshes, materials); });
 
 
 	glm::vec3 min{  FLT_MAX,  FLT_MAX,  FLT_MAX };
@@ -174,7 +175,7 @@ int main(int numArgs, char* args[]) {
 		std::abs(dim.z) < glm::epsilon<float>() ? 1 : (outerBox.z / dim.z),
 	};
 
-	float modelScale = std::min(std::min(mapScale.x, mapScale.y), mapScale.z);
+	float modelScale = 5; //std::min(std::min(mapScale.x, mapScale.y), mapScale.z);
 
 	const auto transform = glm::scale(
 		glm::identity<glm::mat4x4>(),
@@ -186,14 +187,18 @@ int main(int numArgs, char* args[]) {
 		renderables.push_back(m.getRenderable(transform));
 	}
 
-	auto sphere = meshes::createSphere<3>(meshes::icosahedron);
+	auto sphere = meshes::createSphere(meshes::icosahedron, 2);
 	sphere.initVAO();
 	auto theSphere = sphere.getRenderable(transform);
-	theSphere.myColor = new meshColor({ 0, 0, 1, 1 });
-	const auto tex = texture::load("/home/zy4n/3D/shapes/pepe.png");
-	theSphere.myTexture = new meshTexture(tex);
+	theSphere.myColor = new meshColor({ 1, 1, 0, 1 });	
 	renderables.push_back(theSphere);
 
+	auto spherex2 = meshes::createSphere(sphere, 2);
+	spherex2.initVAO();
+	auto theSphereX2 = spherex2.getRenderable(transform);
+	theSphereX2.myColor = new meshColor({ 1, 0, 1, 1 });
+	renderables.push_back(theSphereX2);
+	
 	std::cout << "finished loading mesh\n";
 
 
@@ -209,8 +214,8 @@ int main(int numArgs, char* args[]) {
 	bool lockMouse = true;
 	window.setMouseCursorVisible(!lockMouse);
 
-	//glPolygonMode(GL_FRONT, GL_LINE);
-	//glPolygonMode(GL_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT, GL_LINE);
+	glPolygonMode(GL_BACK, GL_LINE);
 
 	while (running) {
 		const auto start = std::chrono::high_resolution_clock::now();
@@ -271,6 +276,14 @@ int main(int numArgs, char* args[]) {
 
 
 int main() {
+
+	for (u32 i = 1; i < 10; i++) {
+		std::cout << "predictEdgeVertexCount: " << meshes::predictEdgeVertexCount(i) << std::endl;
+		std::cout << "predictEdgeCount:" << meshes::predictEdgeCount(i) << std::endl;
+		std::cout << "predictVertexCount: " << meshes::predictVertexCount(i) << std::endl;
+	}
+
+	/*
 	auto vertexBuffer = meshes::icosahedron.getVertexBuffer();
 	auto indexBuffer = meshes::icosahedron.getIndexBuffer();
 	static constexpr float epsilon = 0.01;
@@ -341,6 +354,7 @@ int main() {
 
 	std::cout << "verts " << vertexBuffer.size() << " " << meshes::icosahedron.getVertexBuffer().size() << std::endl;
 	std::cout << "idxs " << indexBuffer.size() << " " << meshes::icosahedron.getIndexBuffer().size() << std::endl;
+	*/
 }
 
 #endif
