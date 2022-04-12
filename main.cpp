@@ -187,18 +187,20 @@ int main(int numArgs, char* args[]) {
 		renderables.push_back(m.getRenderable(transform));
 	}
 
-	auto sphere = meshes::createSphere(meshes::icosahedron, 2);
-	sphere.initVAO();
-	auto theSphere = sphere.getRenderable(transform);
-	theSphere.myColor = new meshColor({ 1, 1, 0, 1 });	
-	renderables.push_back(theSphere);
+	meshColor c({ 1, 0, 0, 1});
 
-	auto spherex2 = meshes::createSphere(sphere, 2);
-	spherex2.initVAO();
-	auto theSphereX2 = spherex2.getRenderable(transform);
-	theSphereX2.myColor = new meshColor({ 1, 0, 1, 1 });
-	renderables.push_back(theSphereX2);
+	meshes::sphere1X.initVAO();
+	renderables.push_back(meshes::sphere1X.getRenderable(transform));
+	meshes::sphere2X.initVAO();
+	renderables.push_back(meshes::sphere2X.getRenderable(transform));
 	
+	meshes::sphere3X.initVAO();
+	renderables.push_back(meshes::sphere3X.getRenderable(transform));
+
+	for (auto& m : renderables) {
+		m.myColor = &c;
+	}
+
 	std::cout << "finished loading mesh\n";
 
 
