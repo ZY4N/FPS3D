@@ -2,6 +2,10 @@
 
 #include <graphics/shader.hpp>
 
+
+using defaultShader = shader<"projectionMat", "viewMat", "modelMat", "colorMerge", "meshColor">;
+using lineShader = shader<"projectionMat", "viewMat", "modelMat", "lineColor">;
+
 template<string_literal... Ns>
 shader<Ns...>::shader(GLuint programID) : id{ programID } {
 	size_t valueIndex = 0;

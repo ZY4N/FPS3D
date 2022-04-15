@@ -3,6 +3,7 @@
 #include <geometry/meshCommon.hpp>
 #include <glm/gtx/norm.hpp>
 #include <iostream>
+
 struct edgeID {
 	u16 vertex1{ U16_MAX };
 	u16 vertex2{ U16_MAX };
@@ -25,8 +26,6 @@ struct indexedEdgeID {
 	}
 };
 
-
-// this will be cleaned up soon
 shapeMesh meshes::createSphere(const shapeMesh& oldSphere, u32 extraDepth) {
 
 	const auto& oldVertices = oldSphere.getVertexBuffer();
@@ -62,6 +61,8 @@ shapeMesh meshes::createSphere(const shapeMesh& oldSphere, u32 extraDepth) {
 	edgeVerticesToEdgeIndex.reserve(lastNumEdges);
 
 	u16* topIndices = new u16[numNewEdgeVertices + 1];
+
+	//u16 topIndices[numNewEdgeVertices + 1];
 
 	const auto findOrReserveEdgeIndex = [&](u16 v1, u16 v2, u16& index, bool& switched) {
 		// swapping to unify different vertex orders
@@ -131,7 +132,7 @@ shapeMesh meshes::createSphere(const shapeMesh& oldSphere, u32 extraDepth) {
 				bottomLeftIndex = leftEdgeBuffer[leftEdgeFlipped ? numNewEdgeVertices - 1 - i : i];
 			} else {
 				leftEdgeBuffer[leftEdgeFlipped ? numNewEdgeVertices - 1 - i : i] = bottomLeftIndex = vertexBuffer.size();
-				vertexBuffer.emplace_back(posA, texA, posA);
+				vertexBuffer.emplace_back(posA, texA, posA * 2.0f);
 			}
 
 			// creates vertex strips for each triangle row
@@ -140,13 +141,13 @@ shapeMesh meshes::createSphere(const shapeMesh& oldSphere, u32 extraDepth) {
 				float b = (j+1) * horizontalStepScale;
 				u16 newIndex;
 
-				if (i == numNewEdgeVertices && bottomEdgeCached) {
+				if (i == numNewEdgeVertices && bottomEdgeCached) [[unlikey]] {
 					newIndex = bottomEdgeBuffer[bottomEdgeFlipped ? numNewEdgeVertices - 1 - j : j];
 				} else {
 					bottomEdgeBuffer[bottomEdgeFlipped ? numNewEdgeVertices - 1 - j : j] = newIndex = vertexBuffer.size();
-					const auto newPos = glm::normalize(glm::mix(posA, posB, b)) * 0.5f;
+					const auto newPos = glm::normalize(glm::mix(posA, posB, b));
 					const auto newTex = glm::mix(texA, texB, b);
-					vertexBuffer.emplace_back(newPos, newTex, newPos);
+					vertexBuffer.emplace_back(newPos * 0.5f, newTex, newPos);
 				}
 
 				// left triangle
@@ -170,7 +171,7 @@ shapeMesh meshes::createSphere(const shapeMesh& oldSphere, u32 extraDepth) {
 				bottomRightIndex = rightEdgeBuffer[rightEdgeFlipped ? (numNewEdgeVertices - 1 - i) : i];
 			} else {
 				rightEdgeBuffer[rightEdgeFlipped ? numNewEdgeVertices - 1 - i : i] = bottomRightIndex = vertexBuffer.size();
-				vertexBuffer.emplace_back(posB, texB, posB);		
+				vertexBuffer.emplace_back(posB, texB, posB * 2.0f);		
 			}
 
 			indexBuffer.push_back(topIndices[topPosition]);
@@ -186,8 +187,6 @@ shapeMesh meshes::createSphere(const shapeMesh& oldSphere, u32 extraDepth) {
 
 	delete[] edgeVertexIndices;
 	delete[] topIndices;
-
-	std::cout << vertexBuffer.size() << std::endl;
 
 	return shapeMesh(std::move(vertexBuffer), std::move(indexBuffer));
 }

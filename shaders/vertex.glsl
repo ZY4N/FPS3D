@@ -12,7 +12,8 @@ layout (location = 2) in vec3 vertex_normal;
 out vec2 frag_texCoord;
 out vec3 frag_normal;
 
-void main() {	
+void main() {
     gl_Position = projectionMat * viewMat * modelMat * vec4(vertex_position, 1.0);
     frag_texCoord = vertex_texcoord;
+    frag_normal = vertex_normal;
 }

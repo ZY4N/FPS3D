@@ -5,6 +5,7 @@
 #include <GL/glew.h> 
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
+#include <SFML/Graphics/Text.hpp>
 
 #include <cmath>
 #include <thread>
@@ -24,6 +25,8 @@
 
 #include <utils/arg_parser.hpp>
 
+#include <graphics/lineRenderer.hpp>
+
 // 🍝
 extern "C" char _binary_vertex_glsl_start;
 extern "C" char _binary_vertex_glsl_end;
@@ -31,9 +34,14 @@ extern "C" char _binary_vertex_glsl_end;
 extern "C" char _binary_fragment_glsl_start;
 extern "C" char _binary_fragment_glsl_end;
 
+extern "C" char _binary_lineVertex_glsl_start;
+extern "C" char _binary_lineVertex_glsl_end;
+
+extern "C" char _binary_lineFragment_glsl_start;
+extern "C" char _binary_lineFragment_glsl_end;
+
 
 using defaultMesh = mesh<vertex_comps::texCoord, vertex_comps::normal>;
-using defaultShader = shader<"projectionMat", "viewMat", "modelMat", "colorMerge", "meshColor">;
 
 constexpr std::string_view meshFiles[] {
 	"/home/zy4n/3D/GTA/untitled.obj",							// 0
@@ -109,11 +117,20 @@ int main(int numArgs, char* args[]) {
 
 	
 	//----------------------[ shader setup ]----------------------//
+	
 	defaultShader shader = defaultShader::createShader(
 		&_binary_vertex_glsl_start, (&_binary_vertex_glsl_end - &_binary_vertex_glsl_start) - 1,
 		"", 0,
 		&_binary_fragment_glsl_start, (&_binary_fragment_glsl_end - &_binary_fragment_glsl_start) - 1
 	);
+
+	lineShader lines = lineShader::createShader(
+		&_binary_lineVertex_glsl_start, (&_binary_lineVertex_glsl_end - &_binary_lineVertex_glsl_start) - 1,
+		"", 0,
+		&_binary_lineFragment_glsl_start, (&_binary_lineFragment_glsl_end - &_binary_lineFragment_glsl_start) - 1
+	);
+
+	renderer* theRenderer = new lineRenderer(&shader, &lines); 
 	
 	/*
 	defaultShader shader = defaultShader::loadShader(
@@ -122,24 +139,19 @@ int main(int numArgs, char* args[]) {
 		"/home/zy4n/Documents/Code/C++/FPS3D/shaders/fragment.glsl"
 	);
 	*/
-	
 
 	float scale = 1;
+	glm::mat4 projectionMatrix;
 	const auto updateProjection = [&](){
 		static constexpr float halfPi = M_PI / 2.f;
-		shader.set<"projectionMat">(glm::perspective(
+		projectionMatrix = glm::perspective(
 			halfPi / scale,
 			(float)width / height,
 			0.1f, 1000.0f
-		));	
+		);	
 	};
 
 	updateProjection();
-
-	// not a great solution but works for now... 
-	shader.set<"colorMerge">(0.0f);
-	shader.set<"meshColor">(glm::fvec4{ 1.0f, 0.0f, 1.0f, 1.0f });
-
 
 	//----------------------[ mesh loading ]----------------------//
 
@@ -153,8 +165,7 @@ int main(int numArgs, char* args[]) {
 		std::cout << (end - start).count() << "ns" << std::endl;
 	};
 
-	//time([&]() { MeshLoader::loadFromOBJ(std::string(meshFiles[meshIndex]), meshes, materials); });
-
+	time([&]() { MeshLoader::loadFromOBJ(std::string(meshFiles[meshIndex]), meshes, materials); });
 
 	glm::vec3 min{  FLT_MAX,  FLT_MAX,  FLT_MAX };
 	glm::vec3 max{ -FLT_MAX, -FLT_MAX, -FLT_MAX };
@@ -187,19 +198,25 @@ int main(int numArgs, char* args[]) {
 		renderables.push_back(m.getRenderable(transform));
 	}
 
-	meshColor c({ 1, 0, 0, 1});
+	const auto pepe = texture::load("/home/zy4n/3D/shapes/pepe.png");
+	const meshTexture tex(pepe);
+	/*
+	meshes::ellipse100.initVAO();
+	renderables.push_back(meshes::ellipse100.getRenderable(transform));
+	(renderables.end() - 1)->myTexture = &tex;
+	*/
 
-	meshes::sphere1X.initVAO();
-	renderables.push_back(meshes::sphere1X.getRenderable(transform));
-	meshes::sphere2X.initVAO();
-	renderables.push_back(meshes::sphere2X.getRenderable(transform));
-	
 	meshes::sphere3X.initVAO();
 	renderables.push_back(meshes::sphere3X.getRenderable(transform));
+	(renderables.end() - 1)->myTexture = &tex;
 
+	/*
 	for (auto& m : renderables) {
 		m.myColor = &c;
 	}
+	*/
+
+	glm::vec4 pink{ 1, 0, 1, 1 };
 
 	std::cout << "finished loading mesh\n";
 
@@ -215,9 +232,6 @@ int main(int numArgs, char* args[]) {
 	bool running = true;
 	bool lockMouse = true;
 	window.setMouseCursorVisible(!lockMouse);
-
-	glPolygonMode(GL_FRONT, GL_LINE);
-	glPolygonMode(GL_BACK, GL_LINE);
 
 	while (running) {
 		const auto start = std::chrono::high_resolution_clock::now();
@@ -249,21 +263,17 @@ int main(int numArgs, char* args[]) {
 			const auto mouseDelta = sf::Mouse::getPosition(window);
 			sf::Mouse::setPosition({ middleX, middleY }, window);
 			player.update(dt, mouseDelta.x - middleX, mouseDelta.y - middleY);
-			shader.set<"viewMat">(player.getViewMatrix());
 		}
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		for (auto& m : renderables) 
-			m.render(shader);
+		theRenderer->render(renderables, pink, projectionMatrix, player.getViewMatrix());
 
 		window.display();
 
 		const auto finish = std::chrono::high_resolution_clock::now();
 		std::this_thread::sleep_for(frameTime - (finish - start));
 	}
-	glPolygonMode(GL_FRONT, GL_FILL);
-	glPolygonMode(GL_BACK, GL_FILL);
 
 	return 0;
 }
@@ -271,25 +281,19 @@ int main(int numArgs, char* args[]) {
 #else
 
 #include <iostream>
-#include <utils/intX.hpp>
+//#include <utils/intX.hpp>
 #include <geometry/meshes.hpp>
-#include <glm/vec3.hpp>
-#include <array>
+//#include <glm/vec3.hpp>
+//#include <array>
+#include <chrono>
 
 
 int main() {
-
-	for (u32 i = 1; i < 10; i++) {
-		std::cout << "predictEdgeVertexCount: " << meshes::predictEdgeVertexCount(i) << std::endl;
-		std::cout << "predictEdgeCount:" << meshes::predictEdgeCount(i) << std::endl;
-		std::cout << "predictVertexCount: " << meshes::predictVertexCount(i) << std::endl;
-	}
-
-	/*
+	
 	auto vertexBuffer = meshes::icosahedron.getVertexBuffer();
 	auto indexBuffer = meshes::icosahedron.getIndexBuffer();
 	static constexpr float epsilon = 0.01;
-
+	/*
 	for (ssize_t i = 0; i < vertexBuffer.size(); i++) {
 		const auto& aPos = vertexBuffer[i].get<0>();
 		const auto& aTex = vertexBuffer[i].get<1>();
@@ -325,10 +329,12 @@ int main() {
 			i = 0;
 		}
 	}
+	*/
 
+	for (auto& vertex : vertexBuffer) {
+		auto& normal = vertex.get<2>();
+		normal = glm::normalize(normal);
 
-
-	for (const auto& vertex : vertexBuffer) {
 		const float* numbers = (const float*)&vertex;
 		std::cout << "{ { ";
 		for (size_t j = 0; j < 3; j++) {
@@ -356,7 +362,6 @@ int main() {
 
 	std::cout << "verts " << vertexBuffer.size() << " " << meshes::icosahedron.getVertexBuffer().size() << std::endl;
 	std::cout << "idxs " << indexBuffer.size() << " " << meshes::icosahedron.getIndexBuffer().size() << std::endl;
-	*/
 }
 
 #endif

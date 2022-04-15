@@ -1,5 +1,7 @@
 #pragma once
 
+#define DEBUG
+
 #include <GL/glew.h> 
 #include <SFML/OpenGL.hpp>
 
@@ -17,15 +19,15 @@ struct renderable {
 	size_t numIndices;
 	glm::mat4x4 transform;
 
-	meshColor* myColor;
-	meshTexture* myTexture;
+	const meshColor* myColor;
+	const meshTexture* myTexture;
 	
 	renderable(
 		GLuint vba,
 		size_t numIndices,
 		const glm::mat4x4& transform,
-		meshColor* myColor,
-		meshTexture* myTexture
+		const meshColor* myColor,
+		const meshTexture* myTexture
 	) : vba{ vba },
 		numIndices{ numIndices },
 		transform{ transform },
@@ -35,7 +37,7 @@ struct renderable {
 
 	template<string_literal... Ns>
 	void render(shader<Ns...>& s) {
-
+/*
 		s.template set<"modelMat">(transform);
 
 		s.bind();
@@ -53,5 +55,6 @@ struct renderable {
 		s.bind();
 		glBindVertexArray(0);
 		s.unbind();
+		*/
 	}
 };

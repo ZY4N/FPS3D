@@ -61,7 +61,7 @@ public:
 			valueID = valueIDs[valueIndex];
 		}
 		
-		bind();
+		//bind();
 		if constexpr (std::same_as<T, glm::mat4x4>)
 			glUniformMatrix4fv(valueID, 1, false, glm::value_ptr(value));
 		else if constexpr (std::same_as<T, glm::mat3x3>)
@@ -76,8 +76,8 @@ public:
 			glUniform1f(valueID, value);
 		else if constexpr (std::same_as<T, int>)
 			glUniform1i(valueID, value);
-		else T::_unimplemented_function;
-		unbind();
+		else T::_unknown_shader_uniform;
+		//unbind();
 	}
 };
 

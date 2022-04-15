@@ -17,12 +17,12 @@ struct meshColor {
 	}
 
 	template<string_literal... Ns>
-	inline void preRender(shader<Ns...>& s) {
+	inline void preRender(shader<Ns...>& s) const {
 		s.template set<mergeVar>(1.0f);
 		s.template set<colorVar>(c);
 	}
 
 	template<string_literal... Ns>
-	inline void postRender(shader<Ns...>& s) {
+	inline void postRender(shader<Ns...>& s) const {
 	}
 };

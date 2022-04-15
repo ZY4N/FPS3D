@@ -33,14 +33,14 @@ struct meshTexture {
 	}
 
 	template<string_literal... Ns>
-	inline void preRender(shader<Ns...>& s) {
+	inline void preRender(shader<Ns...>& s) const {
 		s.template set<"colorMerge">(0.0f);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureID);
 	}
 
 	template<string_literal... Ns>
-	inline void postRender(shader<Ns...>& s) {
+	inline void postRender(shader<Ns...>& s) const {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 };

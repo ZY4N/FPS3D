@@ -65,7 +65,7 @@ protected:
 	aabb boundingBox;
 
 public:
-	meshColor* myColor{ nullptr };
-	meshTexture* myTexture{ nullptr };
+	const meshColor* myColor{ nullptr };
+	const meshTexture* myTexture{ nullptr };
 
 };
