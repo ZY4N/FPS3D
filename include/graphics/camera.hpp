@@ -11,15 +11,16 @@ public:
 
 	void updateMatrix();
 
-	void update(float deltaT, int dx, int dy);
-
 	const glm::mat4 getViewMatrix();
 
-private:
+	virtual void update(float deltaT, int dx, int dy) = 0;
 
-	glm::vec3 position, velocity, viewDirection;
+private:
 	glm::mat4 matrix;
 
+protected:
+
+	glm::vec3 position, velocity, viewDirection;
 	glm::vec3 worldUp, front, right, up;
 
 	float pitch, yaw, roll;

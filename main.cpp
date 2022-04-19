@@ -21,11 +21,13 @@
 
 #include <graphics/meshEffects.hpp>
 #include <graphics/shaderImpl.hpp>
-#include <graphics/camera.hpp>
+#include <graphics/flyingCamera.hpp>
 
 #include <utils/arg_parser.hpp>
 
 #include <graphics/lineRenderer.hpp>
+#include <graphics/defaultRenderer.hpp>
+#include <graphics/colors.hpp>
 
 // 🍝
 extern "C" char _binary_vertex_glsl_start;
@@ -129,8 +131,13 @@ int main(int numArgs, char* args[]) {
 		"", 0,
 		&_binary_lineFragment_glsl_start, (&_binary_lineFragment_glsl_end - &_binary_lineFragment_glsl_start) - 1
 	);
-
-	renderer* theRenderer = new lineRenderer(&shader, &lines); 
+	
+	renderer* renderers[] {
+		new defaultRenderer(&shader),
+		new lineRenderer(&shader, &lines, colors::pink)
+	};
+	size_t renderIndex = 0;
+	size_t numRenderers = sizeof(renderers) / sizeof(renderers[0]);
 	
 	/*
 	defaultShader shader = defaultShader::loadShader(
@@ -207,23 +214,15 @@ int main(int numArgs, char* args[]) {
 	*/
 
 	meshes::sphere3X.initVAO();
-	renderables.push_back(meshes::sphere3X.getRenderable(transform));
+	renderables.push_back(meshes::sphere3X.getRenderable(glm::translate(transform, { 0, 1, 0 })));
 	(renderables.end() - 1)->myTexture = &tex;
-
-	/*
-	for (auto& m : renderables) {
-		m.myColor = &c;
-	}
-	*/
-
-	glm::vec4 pink{ 1, 0, 1, 1 };
 
 	std::cout << "finished loading mesh\n";
 
 
 	//----------------------[ game loop ]----------------------//
 
-	camera player({ 12, 0, 12 }, { 0, 0, 1 } , { 0, 1, 0 });
+	flyingCamera player({ 12, 0, 12 }, { 0, 0, 1 } , { 0, 1, 0 });
 
 	constexpr auto FPS = 60;
 	constexpr auto frameTime = std::chrono::microseconds(int(1000000.0f / FPS));
@@ -252,6 +251,7 @@ int main(int numArgs, char* args[]) {
 				switch (event.key.code) {
 					case sf::Keyboard::Escape: running = false; break;
 					case sf::Keyboard::Tab: window.setMouseCursorVisible(!(lockMouse ^= 1)); break;
+					case sf::Keyboard::T: renderIndex = (renderIndex + 1) % numRenderers; break;
 					default: break;
 				}
 			}
@@ -267,12 +267,16 @@ int main(int numArgs, char* args[]) {
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		theRenderer->render(renderables, pink, projectionMatrix, player.getViewMatrix());
+		renderers[renderIndex]->render(renderables, projectionMatrix, player.getViewMatrix());
 
 		window.display();
 
 		const auto finish = std::chrono::high_resolution_clock::now();
 		std::this_thread::sleep_for(frameTime - (finish - start));
+	}
+
+	for (size_t i = 0; i < numRenderers; i++) {
+		delete[] renderers[i];
 	}
 
 	return 0;
@@ -287,13 +291,42 @@ int main(int numArgs, char* args[]) {
 //#include <array>
 #include <chrono>
 
+template<typename T>
+struct type_is { using type = T; };
+
+template<bool, typename A, typename>
+struct IF : public type_is<A> {};
+
+template<typename A, typename B>
+struct IF<false, A, B> : public type_is<B> {};
+
+template<bool b, typename A, typename B>
+using IF_t = IF<b, A, B>::type;
+
+
+template<typename... Ts>
+using consumer = void(*)(Ts...);
+
+
+void doSmth(int i)  {
+	putchar('0' + (i % 10));
+}
 
 int main() {
-	
+
+	consumer<int> func = doSmth;
+	func(4);
+
+	IF_t<true, int, double> number1 = 2;
+	IF_t<false, int, double> number2 = 2.262625;
+
+
+
+	/*
 	auto vertexBuffer = meshes::icosahedron.getVertexBuffer();
 	auto indexBuffer = meshes::icosahedron.getIndexBuffer();
 	static constexpr float epsilon = 0.01;
-	/*
+	
 	for (ssize_t i = 0; i < vertexBuffer.size(); i++) {
 		const auto& aPos = vertexBuffer[i].get<0>();
 		const auto& aTex = vertexBuffer[i].get<1>();
@@ -329,29 +362,27 @@ int main() {
 			i = 0;
 		}
 	}
-	*/
+	
 
 	for (auto& vertex : vertexBuffer) {
 		auto& normal = vertex.get<2>();
-		normal = glm::normalize(normal);
+		normal = glm::normalize(vertex.get<0>());
 
 		const float* numbers = (const float*)&vertex;
-		std::cout << "{ { ";
-		for (size_t j = 0; j < 3; j++) {
-			std::cout << numbers[j] << ", ";
-		}
-		std::cout << "}, { ";
+		std::cout << "{ ";
 
-		for (size_t j = 0; j < 2; j++) {
-			std::cout << numbers[3 + j] << ", ";
-		}
+		const auto printVec = [](const float* data, size_t num) {
+			std::cout << "{ ";
+			for (size_t j = 0; j < num; j++) {
+				std::cout << data[j];
+				if (j != num - 1) std::cout << ", ";
+			}
+			std::cout << " }";
+		};
 
-		std::cout << "}, { ";
-
-		for (size_t j = 0; j < 3; j++) {
-			std::cout << numbers[5 + j] << ", ";
-		}
-		std::cout << "} },\n"; 
+		printVec(numbers, 3);		std::cout << ", ";
+		printVec(numbers + 3, 2);	std::cout << ", ";
+		printVec(numbers + 5, 3);	std::cout << " },\n";
 	}
 
 	for (u16 index : indexBuffer) {
@@ -362,6 +393,7 @@ int main() {
 
 	std::cout << "verts " << vertexBuffer.size() << " " << meshes::icosahedron.getVertexBuffer().size() << std::endl;
 	std::cout << "idxs " << indexBuffer.size() << " " << meshes::icosahedron.getIndexBuffer().size() << std::endl;
+	*/
 }
 
 #endif

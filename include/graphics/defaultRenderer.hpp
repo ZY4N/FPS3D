@@ -3,14 +3,12 @@
 #include <graphics/renderer.hpp>
 #include <graphics/shaderImpl.hpp>
 
-struct lineRenderer : public renderer {
+struct defaultRenderer : public renderer {
 
 	defaultShader* main;
-	lineShader* lines;
-	glm::vec4 lineColor;
 
-	lineRenderer(defaultShader* main, lineShader* lines, glm::vec4 color) : 
-		main{ main }, lines{ lines }, lineColor{ std::move(color) } {};
+	defaultRenderer(defaultShader* main) : 
+		main{ main } {};
 
 	void render(
 		const std::vector<renderable>& renderables,

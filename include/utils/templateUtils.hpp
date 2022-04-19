@@ -94,3 +94,17 @@ template<size_t N, string_literal... STRs>
 struct containsStrings {
 	static constexpr bool value = contains_strings<N, STRs...>();
 };
+
+template<int index, typename T, typename... Ts>
+struct find_type {
+	static_assert(index > 0);
+	using type = typename find_type<index-1, Ts...>::type;
+};
+
+template<typename T, typename... Ts>
+struct find_type<0, T, Ts...> { // template parameters not deducible in partial specialization:
+	using type = T;
+};
+
+template<int index, typename... Ts>
+using type_at = typename find_type<index, Ts...>::type;

@@ -11,7 +11,7 @@ in vec3 frag_normal;
 out vec4 FragColor;
 
 void main() {
-    float light = max(dot(vec3(1.0, -1.0, 1.0), -frag_normal), 0);
+    float light = (1.0 + dot(normalize(vec3(1.0, -1.0, 1.0)), -frag_normal)) * 0.5;
     vec4 color = colorMerge * meshColor + (1.0 - colorMerge) * texture(tex, frag_texCoord);
     FragColor = vec4(light * color.xyz, color.w);
 }

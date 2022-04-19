@@ -8,7 +8,7 @@
 struct renderer {
 
 	virtual void render(
-		const std::vector<renderable>& renderables, const glm::vec4& lineColor,
+		const std::vector<renderable>& renderables,
 		const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix
 	) = 0;
 
